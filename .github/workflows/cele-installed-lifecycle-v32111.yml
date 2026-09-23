@@ -2,13 +2,6 @@ name: CELE v3.21.11 Installed-App Lifecycle Certification
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/cele-installed-lifecycle-v32111.yml'
-      - 'scripts/certify-installed-lifecycle-v32111.ps1'
-      - 'release-gates/v3.21.8-manual-release-gate.json'
 
 permissions:
   contents: read

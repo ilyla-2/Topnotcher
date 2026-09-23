@@ -1,0 +1,65 @@
+name: CELE v3.21.13 Installed RC2 Lifecycle Certification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cele-installed-lifecycle-v32113.yml'
+      - 'scripts/certify-installed-lifecycle-v32113.ps1'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  installed-rc2-lifecycle:
+    name: Exact RC2 install, launch, reinstall, uninstall
+    runs-on: windows-2025
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download frozen v3.21.12 RC2 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: CELE-Topnotcher-OS-v3.21.12-RC2-UNSIGNED-Windows-x64
+          path: frozen-rc2
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ilyla-2/Topnotcher
+          run-id: 35897863593
+
+      - name: Certify installed RC2 lifecycle
+        shell: pwsh
+        run: |
+          .\scripts\certify-installed-lifecycle-v32113.ps1 -ArtifactRoot .\frozen-rc2 -OutputDirectory .\lifecycle-rc2-evidence
+
+      - name: Publish lifecycle summary
+        if: always()
+        shell: pwsh
+        run: |
+          Add-Content $env:GITHUB_STEP_SUMMARY '# CELE v3.21.13 — Installed RC2 Lifecycle'
+          $p='lifecycle-rc2-evidence\v3.21.13-installed-rc2-lifecycle-report.json'
+          if(Test-Path $p){
+            $r=Get-Content -Raw $p | ConvertFrom-Json
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Status:** $($r.status)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Install:** $($r.scope.automatedInstall)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Installed CELE WebView2/Tauri IPC:** $($r.scope.automatedInstalledWebViewTauriIpc)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Same-version reinstall:** $($r.scope.automatedSameVersionReinstall)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Uninstall:** $($r.scope.automatedUninstall)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Version-to-version upgrade:** $($r.scope.versionToVersionUpgrade)"
+            Add-Content $env:GITHUB_STEP_SUMMARY '- **releaseReady:** false'
+          } else {
+            Add-Content $env:GITHUB_STEP_SUMMARY '- Lifecycle report not produced.'
+          }
+
+      - name: Upload lifecycle evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CELE-v3.21.13-installed-rc2-lifecycle-evidence
+          path: lifecycle-rc2-evidence/**
+          if-no-files-found: warn
+          retention-days: 90

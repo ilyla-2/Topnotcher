@@ -178,6 +178,16 @@
         "warnings": 0
       },
       "note": "RC2 fixes only public startup routing. It opens the reviewed CELE v3.21.0 payload directly and passed the full 13-check WebView2/Tauri IPC certificate before installer acceptance."
+    },
+    "installedRc2LifecycleAutomation": {
+      "status": "CONFIGURED",
+      "phase": "v3.21.13",
+      "sourceRcRunId": 35897863593,
+      "sourceRcArtifactId": 10767244775,
+      "sourceRcArtifactDigest": "sha256:12c160beb5959ae93144ee3a8ca05abade210d6403724f381a0baeec2cb255ce",
+      "latestSuccessfulRunId": null,
+      "artifactId": null,
+      "artifactDigest": null
     }
   },
   "manualGates": {
@@ -194,7 +204,7 @@
       "evidenceRefs": []
     },
     "installedAppLifecycle": {
-      "status": "PENDING_RC2_INSTALLED_LIFECYCLE",
+      "status": "PENDING_RC2_AUTOMATED_LIFECYCLE_RUN",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": []
