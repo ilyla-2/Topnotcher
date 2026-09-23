@@ -2,7 +2,6 @@ name: CELE v3.21.11 Installed-App Lifecycle Certification
 
 on:
   workflow_dispatch:
-
 permissions:
   contents: read
   actions: read

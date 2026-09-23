@@ -180,14 +180,33 @@
       "note": "RC2 fixes only public startup routing. It opens the reviewed CELE v3.21.0 payload directly and passed the full 13-check WebView2/Tauri IPC certificate before installer acceptance."
     },
     "installedRc2LifecycleAutomation": {
-      "status": "CONFIGURED",
+      "status": "PASS",
       "phase": "v3.21.13",
       "sourceRcRunId": 35897863593,
       "sourceRcArtifactId": 10767244775,
       "sourceRcArtifactDigest": "sha256:12c160beb5959ae93144ee3a8ca05abade210d6403724f381a0baeec2cb255ce",
-      "latestSuccessfulRunId": null,
-      "artifactId": null,
-      "artifactDigest": null
+      "successfulRunId": 35899158734,
+      "successfulRunNumber": 1,
+      "successfulCommitSha": "a06b563eb617ca008758ecc8045397264f0842bd",
+      "runner": "windows-2025",
+      "frozenBranch": "certified/v3.21.13-installed-rc2-lifecycle",
+      "evidenceArtifactId": 10768276647,
+      "evidenceArtifactDigest": "sha256:1123b21265fcd90c3d3749e67e22382585ebbd51e049dc83613f6ba24143e542",
+      "evidenceExpiresAtUtc": "2026-12-22T17:57:30Z",
+      "checks": {
+        "exactRc2Hashes": "PASS",
+        "silentInstall": "PASS",
+        "installedExecutableMatchesInstallerEmbeddedBytes": "PASS",
+        "firstInstalledWebViewTauriIpc": "PASS_13_OF_13",
+        "sameVersionReinstall": "PASS",
+        "postReinstallWebViewTauriIpc": "PASS_13_OF_13",
+        "silentUninstall": "PASS",
+        "uninstallRegistryResidual": "NONE",
+        "executableResidual": "NONE",
+        "installDirectoryResiduals": 0
+      },
+      "installedExecutableSha256": "5b57346d78fb6eea84b4aaffa94ef50ecd466aa58086d040cab7d7e5d09f6fa4",
+      "note": "Automated installed-app lifecycle is proven for exact unsigned RC2. This does not certify human file-picker interaction, DPI/visual behavior, version-to-version upgrade, signing, or final redistribution."
     }
   },
   "manualGates": {
@@ -204,10 +223,14 @@
       "evidenceRefs": []
     },
     "installedAppLifecycle": {
-      "status": "PENDING_RC2_AUTOMATED_LIFECYCLE_RUN",
+      "status": "AUTOMATED_CORE_PASS_MANUAL_UI_AND_UPGRADE_PENDING",
       "reviewedBy": null,
       "reviewedAtUtc": null,
-      "evidenceRefs": []
+      "evidenceRefs": [
+        "GitHub Actions run 35899158734",
+        "Artifact 10768276647",
+        "release-gates/v3.21.13-installed-rc2-lifecycle.json"
+      ]
     },
     "codeSigning": {
       "status": "PENDING",

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "phase": "v3.21.13-installed-rc2-lifecycle-certification",
+  "status": "PASS",
+  "releaseReady": false,
+  "nativeAdapterQA": "pending-manual-desktop-gates",
+  "frozenBranch": "certified/v3.21.13-installed-rc2-lifecycle",
+  "certificationRun": {
+    "id": 35899158734,
+    "number": 1,
+    "runner": "windows-2025",
+    "commitSha": "a06b563eb617ca008758ecc8045397264f0842bd"
+  },
+  "sourceRc2": {
+    "runId": 35897863593,
+    "artifactId": 10767244775,
+    "artifactDigest": "sha256:12c160beb5959ae93144ee3a8ca05abade210d6403724f381a0baeec2cb255ce",
+    "installerSha256": "6d5b378d3c46850c6f55e1046c9880f6fe8fa6b030bc23fc2d4cacddaa5d7d3b",
+    "standaloneExecutableSha256": "958102dec42e838dc2c89c910dc7383cd681e7baf2801abb5013ba7395831972",
+    "authenticode": "NotSigned"
+  },
+  "installedApp": {
+    "product": "CELE Topnotcher OS",
+    "displayVersion": "0.3.6",
+    "identifier": "com.ace.celetopnotcher",
+    "publisherBrand": "ace",
+    "installedExecutableSha256": "5b57346d78fb6eea84b4aaffa94ef50ecd466aa58086d040cab7d7e5d09f6fa4",
+    "matchedExactInstallerEmbeddedExecutable": true
+  },
+  "lifecycle": {
+    "installExitCode": 0,
+    "firstInstalledLaunch": {
+      "webViewTauriIpc": "PASS",
+      "checkCount": 13,
+      "reportSha256": "bb160cda826311796b643e46fe864280920d1b10c234befe7b9e9497f28c7471"
+    },
+    "sameVersionReinstall": {
+      "exitCode": 0,
+      "installedExecutableSha256After": "5b57346d78fb6eea84b4aaffa94ef50ecd466aa58086d040cab7d7e5d09f6fa4",
+      "webViewTauriIpc": "PASS",
+      "checkCount": 13,
+      "reportSha256": "8d6711a74eb16387b66c656295e316f67c57e0c5a2a77ef0f24649f779160563"
+    },
+    "uninstall": {
+      "exitCode": 0,
+      "registryEntryRemaining": false,
+      "executableRemaining": false,
+      "installDirectoryResidualCount": 0
+    }
+  },
+  "evidenceArtifact": {
+    "id": 10768276647,
+    "name": "CELE-v3.21.13-installed-rc2-lifecycle-evidence",
+    "digest": "sha256:1123b21265fcd90c3d3749e67e22382585ebbd51e049dc83613f6ba24143e542",
+    "expiresAtUtc": "2026-12-22T17:57:30Z"
+  },
+  "notCertified": [
+    "human native file-picker interaction",
+    "100%-200% display/DPI visual inspection",
+    "version-to-version upgrade",
+    "Authenticode signing",
+    "final redistribution approval"
+  ]
+}

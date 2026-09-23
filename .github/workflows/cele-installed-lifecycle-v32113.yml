@@ -2,13 +2,6 @@ name: CELE v3.21.13 Installed RC2 Lifecycle Certification
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/cele-installed-lifecycle-v32113.yml'
-      - 'scripts/certify-installed-lifecycle-v32113.ps1'
-
 permissions:
   contents: read
   actions: read
