@@ -1,0 +1,117 @@
+name: CELE v3.21.18 Startup Wire Dependency Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cele-startup-wire-deps-v32118.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct patched RC4 frontend and audit wire dependencies
+        shell: python
+        run: |
+          import base64,hashlib,shutil,zipfile,re,json,subprocess,sys
+          from pathlib import Path
+
+          root=Path.cwd(); tmp=root/".wirediag"; out=root/"diag-source"; evidence=root/"diag-evidence"
+          for p in [tmp,out,evidence]:
+              if p.exists(): shutil.rmtree(p)
+              p.mkdir()
+          with zipfile.ZipFile(root/"CELE_v3_21_6_Cloud_Certification_Payload.zip") as z:z.extractall(tmp)
+          (tmp/"foundation_0_3_5").rename(tmp/"foundation_0_3_6")
+          ns=["part00.b64","part01.b64","part02.b64","part03.b64","part04.b64","part05a.b64","part05b.b64","part06.b64"]
+          raw=base64.b64decode("".join((root/"v3217_overlay_parts"/n).read_text() for n in ns),validate=True)
+          assert hashlib.sha256(raw).hexdigest()=="fa627fa31932f278efa5a8ad6ec5155be5fb9e40899ddc421380d18f7d07a75a"
+          op=tmp/"o.zip";op.write_bytes(raw)
+          with zipfile.ZipFile(op) as z:z.extractall(tmp)
+          (tmp/"OVERLAY_MANIFEST.json").unlink(missing_ok=True);op.unlink(missing_ok=True)
+          for p in tmp.iterdir():
+              d=out/p.name
+              shutil.copytree(p,d,dirs_exist_ok=True) if p.is_dir() else shutil.copy2(p,d)
+
+          front=out/"frontend_v3_21_0"
+          subprocess.check_call([sys.executable,"scripts/patch-ui-interactions-v32117.py","--frontend",str(front),"--report",str(evidence/"17.json")])
+          subprocess.check_call([sys.executable,"scripts/patch-ocr-ui-wire-v32118.py","--frontend",str(front),"--report",str(evidence/"18.json")])
+
+          files=[p for p in front.rglob("*.js") if p.is_file()]
+          texts={p:p.read_text(encoding="utf-8",errors="ignore") for p in files}
+          main=front/"assets/js/02-inline-script-02.js"
+          src=texts[main]
+
+          marker="function wire(){"
+          pos=src.find(marker)
+          if pos<0: raise SystemExit("wire() not found")
+          brace=src.find("{",pos)
+          depth=0; end=None
+          in_s=None; esc=False
+          for i in range(brace,len(src)):
+              ch=src[i]
+              if in_s:
+                  if esc: esc=False
+                  elif ch=="\\": esc=True
+                  elif ch==in_s: in_s=None
+                  continue
+              if ch in "'\"": in_s=ch; continue
+              if ch=="{": depth+=1
+              elif ch=="}":
+                  depth-=1
+                  if depth==0:
+                      end=i+1;break
+          if end is None: raise SystemExit("wire() brace match failed")
+          wire=src[pos:end]
+
+          direct=set(re.findall(r'\.(?:onclick|onchange|oninput|onkeydown|onkeyup|onsubmit)\s*=\s*([A-Za-z_$][\w$]*)\b',wire))
+          calls=set(re.findall(r'(?<![.\w$])([A-Za-z_$][\w$]*)\s*\(',wire))
+          keywords={"if","for","while","switch","catch","function","typeof"}
+          builtins={"alert","confirm","prompt","setTimeout","clearTimeout","setInterval","clearInterval","Number","String","Boolean","Array","Object","Math","Date","Map","Set","Promise","Error","parseInt","parseFloat","isNaN"}
+          candidates=sorted((direct|calls)-keywords-builtins)
+
+          corpus="\n".join(texts.values())
+          def has_def(name):
+              pats=[
+                  rf'\b(?:async\s+)?function\s+{re.escape(name)}\b',
+                  rf'\b(?:const|let|var)\s+{re.escape(name)}\b',
+                  rf'\bwindow\.{re.escape(name)}\s*=',
+                  rf'\bglobalThis\.{re.escape(name)}\s*=',
+              ]
+              return any(re.search(p,corpus) for p in pats)
+
+          def_files={}
+          for name in candidates:
+              hits=[]
+              for p,t in texts.items():
+                  pats=[
+                    rf'\b(?:async\s+)?function\s+{re.escape(name)}\b',
+                    rf'\b(?:const|let|var)\s+{re.escape(name)}\b',
+                    rf'\bwindow\.{re.escape(name)}\s*=',
+                    rf'\bglobalThis\.{re.escape(name)}\s*=',
+                  ]
+                  if any(re.search(pat,t) for pat in pats):hits.append(str(p.relative_to(front)))
+              def_files[name]=hits
+
+          missing=[n for n in candidates if not def_files[n]]
+          referenced_only={}
+          for name in missing:
+              refs=[]
+              for p,t in texts.items():
+                  if re.search(rf'\b{re.escape(name)}\b',t):refs.append(str(p.relative_to(front)))
+              referenced_only[name]=refs
+
+          report={
+            "wireCandidateCount":len(candidates),
+            "directHandlerSymbols":sorted(direct),
+            "candidateSymbols":candidates,
+            "missingDefinitions":missing,
+            "missingReferenceFiles":referenced_only,
+            "definitions":def_files,
+          }
+          (evidence/"wire-dependency-audit.json").write_text(json.dumps(report,indent=2)+"\n")
+          print(json.dumps(report,indent=2))
