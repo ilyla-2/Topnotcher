@@ -51,25 +51,62 @@
       "evidenceRef": "release-gates/v3.21.9-release-identity.json"
     },
     "publicReleaseCandidate": {
-      "status": "BUILDER_REVISED_CERTIFIED_STAGING",
+      "status": "RC1_BUILT_AND_AUDITED",
       "phase": "v3.21.10",
       "candidate": "RC1",
       "platform": "windows-x64",
       "signing": "UNSIGNED",
+      "distributionStatus": "CONTROLLED_MANUAL_CERTIFICATION_ONLY",
       "workflow": ".github/workflows/cele-public-rc-v32110.yml",
-      "latestSuccessfulRunId": null,
-      "artifactId": null,
-      "artifactDigest": null,
-      "executableSha256": null,
-      "installerSha256": null,
-      "note": "RC1 now uses foundation scripts/release_tool.py stage-certification with the exact frozen manifest, preserving the foundation app shell and staging the reviewed 103-file payload under app/payload.",
-      "failedRunId": 35894332485,
-      "failedRunClassification": "CUSTOM_STAGING_REPLACED_BY_CERTIFIED_RELEASE_TOOL",
+      "successfulRunId": 35894857839,
+      "successfulRunNumber": 4,
+      "successfulCommitSha": "0bd13eee4c2ffb847ab1c3512bc91ea3f9108cfd",
+      "runner": "windows-2025",
+      "frozenBranch": "rc/v3.21.10-windows-rc1-unsigned",
+      "artifactId": 10767226392,
+      "artifactName": "CELE-Topnotcher-OS-v3.21.10-RC1-UNSIGNED-Windows-x64",
+      "artifactDigest": "sha256:99b6f92c75e8cf09fca18e14a73b32f9d31242aec68d7290f9229eb0ae0667d8",
+      "artifactExpiresAtUtc": "2026-12-22T17:19:53Z",
+      "rcArchive": {
+        "file": "CELE_Topnotcher_OS_v3.21.10_RC1_UNSIGNED_Windows_x64.zip",
+        "sha256": "05d0b2df747804bf06bb39cbbc4669dfae1802dd2deb9e93c26cbe9099338736"
+      },
+      "executable": {
+        "file": "CELE-Topnotcher-OS-v3.21.10-RC1-unsigned.exe",
+        "bytes": 10353152,
+        "sha256": "baeaeddd1175100741d0c3c6bd1f34454399a4a8636312d9127af44d71faef77",
+        "authenticodeStatus": "NotSigned"
+      },
+      "installer": {
+        "file": "CELE-Topnotcher-OS-v3.21.10-RC1-unsigned-setup.exe",
+        "bytes": 219105389,
+        "sha256": "940c0e68c2097080c8e1e1c2da02d3aca7c018e08214911ad24bf718cadeb753",
+        "authenticodeStatus": "NotSigned"
+      },
+      "builtInstallerAudit": {
+        "status": "PASS",
+        "extractedFiles": 8,
+        "extractedBytes": 223576349,
+        "forbiddenFiles": 0,
+        "forbiddenPaths": 0,
+        "privateMarkerHits": 0,
+        "secretPatternHits": 0,
+        "sourceAuditStatus": "PASS",
+        "failures": 0,
+        "warnings": 0
+      },
+      "identity": {
+        "baseIdentifier": "local.cele.topnotcher.foundation",
+        "releaseIdentifier": "com.ace.celetopnotcher",
+        "publisherBrand": "ace",
+        "baseTauriConfigPreserved": true
+      },
       "previousFailedRunIds": [
         35893752706,
         35894173785,
         35894332485
-      ]
+      ],
+      "note": "First successful unsigned Windows release candidate. Suitable for controlled manual file-picker, DPI, and installed-app lifecycle certification only. Signing and final redistribution approval remain pending."
     }
   },
   "manualGates": {

@@ -2,18 +2,6 @@ name: CELE v3.21.10 First Public RC Builder
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/cele-public-rc-v32110.yml'
-      - 'scripts/build-public-rc-v32110.ps1'
-      - 'scripts/audit-built-windows-rc-v32110.py'
-      - 'scripts/apply-release-identity-v3219.py'
-      - 'scripts/public-release-audit-v3218.py'
-      - 'release-gates/v3.21.9-release-identity.json'
-      - 'v3217_overlay_parts/**'
-      - 'CELE_v3_21_6_Cloud_Certification_Payload.zip'
 
 permissions:
   contents: read
