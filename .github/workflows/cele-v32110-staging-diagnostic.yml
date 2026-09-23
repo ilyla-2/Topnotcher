@@ -46,11 +46,22 @@ jobs:
 
           text=(foundation/"scripts"/"task.mjs").read_text(encoding="utf-8")
           lines=text.splitlines()
-          for needle in ["desktop-api.js","stage-certification","Staged exact reviewed payload"]:
-              print("")
-              print("EXCERPTS FOR:", needle)
-              for i,line in enumerate(lines):
-                  if needle in line:
-                      for j in range(max(0,i-8), min(len(lines),i+13)):
-                          print(f"{j+1:04d}: {lines[j]}")
-                      print("---")
+          print("")
+          print("FOUNDATION APP CONTRACT REFERENCES:")
+          needles=["desktop-api.js","app/index.html","Missing app/","stage-certification","Staged exact reviewed payload"]
+          for script in foundation.rglob("*"):
+              if not script.is_file() or script.suffix.lower() not in {".mjs",".js",".py",".json"}:
+                  continue
+              try:
+                  body=script.read_text(encoding="utf-8")
+              except Exception:
+                  continue
+              slines=body.splitlines()
+              for needle in needles:
+                  for i,line in enumerate(slines):
+                      if needle in line:
+                          print("")
+                          print("FILE:",script.relative_to(foundation),"NEEDLE:",needle)
+                          for j in range(max(0,i-6), min(len(slines),i+11)):
+                              print(f"{j+1:04d}: {slines[j]}")
+                          print("---")
