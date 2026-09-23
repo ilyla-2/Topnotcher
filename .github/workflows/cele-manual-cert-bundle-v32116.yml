@@ -2,16 +2,6 @@ name: CELE v3.21.16 One-Click Manual Certification Bundle
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/cele-manual-cert-bundle-v32116.yml'
-      - 'manual-certification/run-v32115-desktop-ui-cert.ps1'
-      - 'manual-certification/v3.21.15-manual-desktop-ui-evidence-template.json'
-      - 'manual-certification/RUN-ME-v32115.cmd'
-      - 'docs/V3_21_15_MANUAL_DESKTOP_UI_CERT.md'
-
 permissions:
   contents: read
   actions: read

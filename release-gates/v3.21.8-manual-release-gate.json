@@ -259,16 +259,25 @@
       "note": "Guided human certification for native file-picker interaction and 100/125/150/200% DPI visual behavior. It records evidence but cannot auto-approve."
     },
     "manualDesktopUiBundle": {
-      "status": "BUILDER_CONFIGURED",
+      "status": "PACKAGED_AND_VERIFIED",
       "phase": "v3.21.16",
       "workflow": ".github/workflows/cele-manual-cert-bundle-v32116.yml",
+      "successfulRunId": 35901820040,
+      "successfulRunNumber": 1,
+      "successfulCommitSha": "70aa3c2a779283b447943c4fdb068f6f95174ee1",
+      "runner": "windows-2025",
       "sourceRc2RunId": 35897863593,
       "sourceRc2ArtifactId": 10767244775,
+      "sourceRc2ArtifactDigest": "sha256:12c160beb5959ae93144ee3a8ca05abade210d6403724f381a0baeec2cb255ce",
       "exactInstallerSha256": "6d5b378d3c46850c6f55e1046c9880f6fe8fa6b030bc23fc2d4cacddaa5d7d3b",
-      "latestSuccessfulRunId": null,
-      "artifactId": null,
-      "artifactDigest": null,
-      "note": "Packages the exact frozen RC2 installer with the v3.21.15 human file-picker/DPI certification kit and RUN-ME launcher. It does not auto-approve manual gates."
+      "bundleFile": "CELE_v3.21.16_One_Click_Manual_Certification_Windows.zip",
+      "bundleSha256": "41aebc97455832bd86c41831f7ed59428f1ccd96a6b3d13e510f5999eb4c4090",
+      "artifactId": 10769471646,
+      "artifactName": "CELE-v3.21.16-One-Click-Manual-Certification-Windows",
+      "artifactDigest": "sha256:5af8db6112a514e3dfc603ad4e04c2b4348fb46cc4cd0edd989fe4e52895f86f",
+      "artifactSizeBytes": 438401966,
+      "artifactExpiresAtUtc": "2026-12-22T18:20:52Z",
+      "note": "Self-contained controlled-test bundle containing exact frozen RC2 plus v3.21.15 human file-picker/DPI kit and RUN-ME launcher. Manual gates remain pending until evidence is executed and reviewed."
     }
   },
   "manualGates": {
