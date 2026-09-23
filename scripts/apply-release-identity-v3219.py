@@ -42,7 +42,25 @@ def main():
 
     release_config = {
         "identifier": NEW_IDENTIFIER,
-        "productName": "CELE Topnotcher OS"
+        "productName": "CELE Topnotcher OS",
+        "app": {
+            "windows": [
+                {
+                    "label": "main",
+                    "title": "CELE Topnotcher OS",
+                    "url": "payload/CELE_Topnotcher_OS_v3_21_0.html",
+                    "width": 1280,
+                    "height": 800,
+                    "minWidth": 640,
+                    "minHeight": 480,
+                    "resizable": True,
+                    "maximizable": True,
+                    "minimizable": True,
+                    "decorations": True,
+                    "create": False
+                }
+            ]
+        }
     }
     meta["publisher"] = PUBLISHER_BRAND
     meta["signed"] = False
@@ -66,6 +84,7 @@ def main():
             "signed": False,
             "publicReleaseApproved": False,
             "signingStatus": "not-configured",
+            "startupUrl": "payload/CELE_Topnotcher_OS_v3_21_0.html",
         },
         "touchedFiles": [
             "src-tauri/tauri.release-ace.conf.json",

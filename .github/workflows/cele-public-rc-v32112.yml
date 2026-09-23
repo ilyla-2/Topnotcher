@@ -1,0 +1,122 @@
+name: CELE v3.21.12 Public Startup Routing RC2
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cele-public-rc-v32112.yml'
+      - 'scripts/build-public-rc-v32112.ps1'
+      - 'scripts/audit-built-windows-rc-v32112.py'
+      - 'scripts/apply-release-identity-v3219.py'
+
+permissions:
+  contents: read
+
+jobs:
+  windows-rc2:
+    name: Build, launch and audit Windows RC2
+    runs-on: windows-2025
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Select stable MSVC Rust
+        shell: pwsh
+        run: |
+          rustup default stable-x86_64-pc-windows-msvc
+          rustc -Vv
+          cargo -V
+
+      - name: Reconstruct exact certified v3.21.7 source
+        shell: python
+        run: |
+          import base64, hashlib, shutil, zipfile
+          from pathlib import Path
+          root=Path.cwd(); base=root/"CELE_v3_21_6_Cloud_Certification_Payload.zip"; parts=root/"v3217_overlay_parts"
+          out=root/"cele-rc2-source"; tmp=root/".tmp-v32112-rebuild"
+          if tmp.exists(): shutil.rmtree(tmp)
+          if out.exists(): shutil.rmtree(out)
+          tmp.mkdir(); out.mkdir()
+          with zipfile.ZipFile(base) as z: z.extractall(tmp)
+          (tmp/"foundation_0_3_5").rename(tmp/"foundation_0_3_6")
+          names=["part00.b64","part01.b64","part02.b64","part03.b64","part04.b64","part05a.b64","part05b.b64","part06.b64"]
+          raw=base64.b64decode("".join((parts/n).read_text() for n in names),validate=True)
+          assert len(raw)==38518
+          assert hashlib.sha256(raw).hexdigest()=="fa627fa31932f278efa5a8ad6ec5155be5fb9e40899ddc421380d18f7d07a75a"
+          op=tmp/"overlay.zip"; op.write_bytes(raw)
+          with zipfile.ZipFile(op) as z: z.extractall(tmp)
+          (tmp/"OVERLAY_MANIFEST.json").unlink(missing_ok=True); op.unlink(missing_ok=True)
+          for p in tmp.iterdir():
+              dst=out/p.name
+              shutil.copytree(p,dst,dirs_exist_ok=True) if p.is_dir() else shutil.copy2(p,dst)
+          print("Exact certified source reconstruction: PASS")
+
+      - name: Audit frozen source
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path rc2-evidence | Out-Null
+          python scripts/public-release-audit-v3218.py --root cele-rc2-source --out rc2-evidence/source-public-package-audit.json
+
+      - name: Apply ace identity and direct reviewed-frontend startup
+        shell: pwsh
+        run: |
+          python scripts/apply-release-identity-v3219.py --foundation cele-rc2-source/foundation_0_3_6 --report rc2-evidence/release-identity-overlay.json
+
+      - name: Build and certify RC2
+        shell: pwsh
+        run: |
+          .\scripts\build-public-rc-v32112.ps1 -FoundationPath .\cele-rc2-source\foundation_0_3_6 -FrontendPath .\cele-rc2-source\frontend_v3_21_0 -OutputDirectory .\rc2-output -SourceAuditPath .\rc2-evidence\source-public-package-audit.json -IdentityReportPath .\rc2-evidence\release-identity-overlay.json
+
+      - name: Audit built RC2 installer payload
+        shell: pwsh
+        run: |
+          python scripts/audit-built-windows-rc-v32112.py --extracted rc2-output/installer-extracted --installer rc2-output/binaries/CELE-Topnotcher-OS-v3.21.12-RC2-unsigned-setup.exe --executable rc2-output/binaries/CELE-Topnotcher-OS-v3.21.12-RC2-unsigned.exe --source-audit rc2-output/source-public-package-audit.json --identity-report rc2-output/release-identity-overlay.json --out rc2-output/built-installer-audit.json
+
+      - name: Remove expanded installer payload
+        shell: pwsh
+        run: Remove-Item -Recurse -Force -LiteralPath rc2-output\installer-extracted
+
+      - name: Create RC2 archive
+        shell: pwsh
+        run: |
+          $zip = Join-Path $env:GITHUB_WORKSPACE 'CELE_Topnotcher_OS_v3.21.12_RC2_UNSIGNED_Windows_x64.zip'
+          Compress-Archive -Path rc2-output\* -DestinationPath $zip -CompressionLevel Optimal
+          $hash=(Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          @{file=[IO.Path]::GetFileName($zip);bytes=(Get-Item $zip).Length;sha256=$hash;releaseReady=$false} | ConvertTo-Json | Set-Content rc2-output\RC2_ARCHIVE_SHA256.json
+          Write-Host "RC2 archive SHA-256: $hash"
+
+      - name: Summary
+        if: always()
+        shell: pwsh
+        run: |
+          Add-Content $env:GITHUB_STEP_SUMMARY '# CELE v3.21.12 — Public Startup Routing RC2'
+          if (Test-Path 'rc2-output\RC_MANIFEST.json') {
+            $m=Get-Content -Raw 'rc2-output\RC_MANIFEST.json' | ConvertFrom-Json
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Public startup:** $($m.publicStartupUrl)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Public startup IPC:** $($m.publicStartupWebViewTauriIpc)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **EXE SHA-256:** $($m.executable.sha256)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Installer SHA-256:** $($m.installer.sha256)"
+            Add-Content $env:GITHUB_STEP_SUMMARY '- **releaseReady:** false'
+          }
+
+      - name: Upload RC2
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CELE-Topnotcher-OS-v3.21.12-RC2-UNSIGNED-Windows-x64
+          path: |
+            rc2-output/**
+            CELE_Topnotcher_OS_v3.21.12_RC2_UNSIGNED_Windows_x64.zip
+          if-no-files-found: error
+          retention-days: 90

@@ -124,6 +124,26 @@
         35896869052,
         35897039298
       ]
+    },
+    "publicReleaseCandidateRc1LifecycleFinding": {
+      "status": "SUPERSEDED_FOR_RELEASE_TESTING",
+      "rc1RunId": 35894857839,
+      "finding": "RC1 opened the foundation diagnostic shell instead of directly opening the reviewed CELE frontend.",
+      "evidenceRunId": 35897305024,
+      "classification": "RELEASE_STARTUP_ROUTING",
+      "productCoreRegression": false
+    },
+    "publicReleaseCandidateRc2": {
+      "status": "BUILDER_CONFIGURED",
+      "phase": "v3.21.12",
+      "candidate": "RC2",
+      "platform": "windows-x64",
+      "signing": "UNSIGNED",
+      "requiredStartupUrl": "payload/CELE_Topnotcher_OS_v3_21_0.html",
+      "requiredPublicStartupIpcChecks": "13/13 PASS",
+      "latestSuccessfulRunId": null,
+      "artifactId": null,
+      "artifactDigest": null
     }
   },
   "manualGates": {
@@ -140,7 +160,7 @@
       "evidenceRefs": []
     },
     "installedAppLifecycle": {
-      "status": "PENDING_AUTOMATED_LIFECYCLE_RETRY",
+      "status": "PENDING_RC2_BUILD_AND_LIFECYCLE",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": []
