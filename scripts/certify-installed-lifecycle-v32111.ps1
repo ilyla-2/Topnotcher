@@ -51,7 +51,10 @@ function Resolve-InstalledExe([object]$Entry) {
       }
     }
     if ($Entry.InstallLocation) {
-      $candidates.Add((Join-Path ([string]$Entry.InstallLocation) "CELE-Topnotcher-OS.exe"))
+      $location = ([string]$Entry.InstallLocation).Trim().Trim('"')
+      if ($location) {
+        $candidates.Add((Join-Path $location "CELE-Topnotcher-OS.exe"))
+      }
     }
   }
   $candidates.Add((Join-Path $env:LOCALAPPDATA "CELE Topnotcher OS\CELE-Topnotcher-OS.exe"))

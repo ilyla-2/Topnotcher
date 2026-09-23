@@ -109,7 +109,7 @@
       "note": "First successful unsigned Windows release candidate. Suitable for controlled manual file-picker, DPI, and installed-app lifecycle certification only. Signing and final redistribution approval remain pending."
     },
     "installedLifecycleAutomation": {
-      "status": "CONFIGURED",
+      "status": "RETRY_AFTER_REGISTRY_PATH_NORMALIZATION",
       "phase": "v3.21.11",
       "workflow": ".github/workflows/cele-installed-lifecycle-v32111.yml",
       "sourceRcRunId": 35894857839,
@@ -117,7 +117,9 @@
       "latestSuccessfulRunId": null,
       "artifactId": null,
       "artifactDigest": null,
-      "note": "Tests the exact frozen RC1 artifact: silent install, installed WebView2/Tauri IPC, same-version reinstall, and uninstall. Version-to-version upgrade and human UI checks are not claimed."
+      "note": "Run #1 silently installed exact RC1, then the harness misparsed a quoted NSIS InstallLocation. Path normalization was corrected; application/installer bytes are unchanged.",
+      "failedRunId": 35896869052,
+      "failedRunClassification": "HARNESS_REGISTRY_QUOTING"
     }
   },
   "manualGates": {
@@ -134,7 +136,7 @@
       "evidenceRefs": []
     },
     "installedAppLifecycle": {
-      "status": "PENDING_AUTOMATED_LIFECYCLE_RUN",
+      "status": "PENDING_AUTOMATED_LIFECYCLE_RETRY",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": []
