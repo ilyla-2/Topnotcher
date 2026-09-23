@@ -88,3 +88,17 @@ jobs:
               name=str(p.relative_to(front)).lower()
               if any(k in name for k in ["nav","shell","router","product","sidebar","ui","layout","app"]):
                   print(p.relative_to(front))
+
+          import json
+          manifest=json.loads((front/"ASTRA_PAYLOAD_MANIFEST_v3_21_0.pending.json").read_text())
+          print("\n### MANIFEST SHAPE ###")
+          print("TOP_KEYS", list(manifest.keys()))
+          print("ENTRY", manifest.get("entry"))
+          print("FILE_COUNT", len(manifest.get("files",[])))
+          print("FIRST_FILE", json.dumps(manifest.get("files",[{}])[0],sort_keys=True))
+          jsrows=[x for x in manifest.get("files",[]) if str(x.get("path","")).endswith(".js")]
+          print("LAST_JS_FILE", json.dumps(jsrows[-1] if jsrows else {},sort_keys=True))
+          pub=json.loads((front/"PUBLIC_INCLUSION_MANIFEST_v3_21_0.json").read_text())
+          print("PUBLIC_TOP_KEYS", list(pub.keys()))
+          print("PUBLIC_FILE_COUNT", len(pub.get("files",[])))
+          print("PUBLIC_LAST_JS", json.dumps([x for x in pub.get("files",[]) if str(x.get("path","")).endswith(".js")][-1],sort_keys=True))
