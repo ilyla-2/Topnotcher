@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "phase": "v3.21.8-manual-release-evidence",
+  "instructions": "Populate only after testing the exact release-candidate package on an unrestricted Windows desktop. Do not mark a gate APPROVED without direct evidence.",
+  "tester": {
+    "name": "",
+    "reviewedAtUtc": null
+  },
+  "releaseCandidate": {
+    "installerSha256": "",
+    "executableSha256": "",
+    "version": ""
+  },
+  "environment": {
+    "windowsEdition": "",
+    "windowsVersion": "",
+    "build": "",
+    "architecture": "x64"
+  },
+  "manualChecks": {
+    "nativeFilePicker": {
+      "status": "PENDING",
+      "notes": "",
+      "evidenceRefs": []
+    },
+    "displayAndDpi": {
+      "status": "PENDING",
+      "testedScaling": [
+        "100%",
+        "125%",
+        "150%",
+        "200%"
+      ],
+      "notes": "",
+      "evidenceRefs": []
+    },
+    "installedAppLifecycle": {
+      "status": "PENDING",
+      "notes": "",
+      "evidenceRefs": []
+    },
+    "codeSigning": {
+      "status": "PENDING",
+      "signerSubject": "",
+      "certificateThumbprint": "",
+      "timestampStatus": "",
+      "notes": "",
+      "evidenceRefs": []
+    },
+    "redistributionReview": {
+      "status": "PENDING",
+      "reviewedPackageSha256": "",
+      "notes": "",
+      "evidenceRefs": []
+    }
+  }
+}
