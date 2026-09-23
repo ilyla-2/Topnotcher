@@ -437,11 +437,36 @@
       "trustSemanticsChanged": false,
       "releaseReady": false,
       "note": "Automated stress removes the known RC4 browser whole-file parsing bottleneck for native PDFs >=8 MiB, but the exact real preboard PDF must be retested on the user's Windows machine before the native file-picker gate can return to PASS candidate."
+    },
+    "rc5RealPreboardRetestKit": {
+      "status": "PACKAGED_AND_VERIFIED",
+      "phase": "v3.21.21",
+      "successfulRunId": 35916646710,
+      "successfulCommitSha": "4e7ab88486d14dd9ae143911ea5760af473f9f09",
+      "runner": "windows-2025",
+      "sourceRc5RunId": 35914572661,
+      "sourceRc5ArtifactId": 10774129734,
+      "exactInstallerSha256": "9e6ffb1a8a04fea43087a7eb13dab55721d5cfbbf3d5ed816bb71a190fea85da",
+      "bundleFile": "CELE_v3.21.21_RC5_Real_Preboard_Retest_Windows.zip",
+      "bundleSha256": "8583055970dedaa4b820532778f8a80bb3055c4ddf40cd60c0b1f2c569717c56",
+      "artifactId": 10775377792,
+      "artifactName": "CELE-v3.21.21-RC5-Real-Preboard-Retest-Windows",
+      "artifactDigest": "sha256:dfae7695aad974d44b263556273b930bee21778daaf0c5d56cb097ab4bd80e6c",
+      "artifactSizeBytes": 438404849,
+      "artifactExpiresAtUtc": "2026-12-22T20:32:33Z",
+      "powerShellSyntax": "PASS",
+      "monitor": {
+        "durationSeconds": 90,
+        "hangThresholdConsecutiveSamples": 5,
+        "recordsProcessResponding": true,
+        "sourcePdfCopiedIntoEvidence": false
+      },
+      "note": "Focused human retest uses the same preboard PDF that froze RC4. It reinstalls exact RC5 and records process responsiveness plus import/render/OCR/cancel/invalid-PDF checks. DPI remains separate."
     }
   },
   "manualGates": {
     "nativeFilePicker": {
-      "status": "READY_FOR_RC5_REAL_PREBOARD_RETEST",
+      "status": "READY_FOR_RC5_REAL_PREBOARD_RETEST_WITH_PROCESS_MONITOR",
       "reviewedBy": "ace",
       "reviewedAtUtc": "2026-09-23T19:48:35.3689245Z",
       "evidenceRefs": [
