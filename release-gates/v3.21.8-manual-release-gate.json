@@ -51,7 +51,7 @@
       "evidenceRef": "release-gates/v3.21.9-release-identity.json"
     },
     "publicReleaseCandidate": {
-      "status": "BUILDER_REVISED_AFTER_GUARD",
+      "status": "BUILDER_REVISED_STAGING_MAP",
       "phase": "v3.21.10",
       "candidate": "RC1",
       "platform": "windows-x64",
@@ -62,9 +62,13 @@
       "artifactDigest": null,
       "executableSha256": null,
       "installerSha256": null,
-      "note": "RC run #1 correctly failed because mutating the certified base identifier triggered foundation integrity. v3.21.10 now uses a separate Tauri release overlay config; no product regression was indicated.",
-      "failedRunId": 35893752706,
-      "failedRunClassification": "RELEASE_OVERLAY_ARCHITECTURE_GUARD"
+      "note": "Run #2 preserved the certified base identity but staged the frozen HTML under its source filename. The builder now maps the exact reviewed entry bytes to app/index.html, matching the certified foundation contract.",
+      "failedRunId": 35894173785,
+      "failedRunClassification": "CERTIFIED_FRONTEND_ENTRYPOINT_STAGING_GUARD",
+      "previousFailedRunIds": [
+        35893752706,
+        35894173785
+      ]
     }
   },
   "manualGates": {

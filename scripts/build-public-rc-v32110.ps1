@@ -87,16 +87,28 @@ if (Test-Path -LiteralPath $frontendDist) {
   Remove-Item -Recurse -Force -LiteralPath $frontendDist
 }
 New-Item -ItemType Directory -Force -Path $frontendDist | Out-Null
-Copy-Item -Recurse -Force -Path (Join-Path $FrontendPath "*") -Destination $frontendDist
 
 $manifest = Get-Content -Raw -LiteralPath (Join-Path $FrontendPath "ASTRA_PAYLOAD_MANIFEST_v3_21_0.pending.json") | ConvertFrom-Json
+$stagedCount = 0
 foreach ($row in $manifest.files) {
   $sourceFile = Join-Path $FrontendPath $row.path
-  $stagedFile = Join-Path $frontendDist $row.path
-  if (-not (Test-Path -LiteralPath $stagedFile -PathType Leaf)) { throw "Staged runtime missing $($row.path)" }
+  if (-not (Test-Path -LiteralPath $sourceFile -PathType Leaf)) { throw "Frozen runtime source missing $($row.path)" }
+  $targetRel = [string]$row.path
+  if ($targetRel -eq [string]$manifest.entry) {
+    $targetRel = "index.html"
+  }
+  $stagedFile = Join-Path $frontendDist $targetRel
+  $stagedParent = Split-Path -Parent $stagedFile
+  if ($stagedParent) { New-Item -ItemType Directory -Force -Path $stagedParent | Out-Null }
+  Copy-Item -LiteralPath $sourceFile -Destination $stagedFile -Force
   if ((Get-Sha256 $sourceFile) -ne (Get-Sha256 $stagedFile)) { throw "Staged runtime byte mismatch: $($row.path)" }
+  if ((Get-Sha256 $stagedFile) -ne ([string]$row.sha256).ToLowerInvariant()) { throw "Staged runtime manifest hash mismatch: $($row.path)" }
+  $stagedCount++
 }
-Write-Host "Frozen frontend staging verified: $($manifest.files.Count)/$($manifest.files.Count) files."
+if (-not (Test-Path -LiteralPath (Join-Path $frontendDist "index.html") -PathType Leaf)) {
+  throw "Reviewed frontend entrypoint was not mapped to app/index.html."
+}
+Write-Host "Frozen frontend staging verified: $stagedCount/$($manifest.files.Count) reviewed files; entrypoint mapped byte-identically to index.html."
 
 Section "Build unsigned production-identity Windows RC"
 Push-Location $FoundationPath
