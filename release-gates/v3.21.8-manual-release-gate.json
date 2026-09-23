@@ -329,27 +329,35 @@
       "questionDataChanged": false
     },
     "manualDesktopUiRc4Kit": {
-      "status": "BUILDER_CONFIGURED",
+      "status": "PACKAGED_AND_VERIFIED",
       "phase": "v3.21.19",
       "sourceRc4RunId": 35908267625,
       "sourceRc4ArtifactId": 10771838377,
+      "sourceRc4ArtifactDigest": "sha256:f889706835206cb5a2b86807d88ceaed7ccbcedc6c2091fadd64f4f9cd59ccc2",
       "exactInstallerSha256": "7ec4f3db339803f431b7ab081f325c19e17ffc1adbffa28dd8dd1536154696f6",
-      "workflow": ".github/workflows/cele-manual-cert-bundle-v32119.yml",
-      "latestSuccessfulRunId": null,
-      "artifactId": null,
-      "artifactDigest": null,
-      "note": "Corrected human-certification kit always reinstalls RC4 and adds explicit Practice/Progress/Sources/System interaction checks before PDF/OCR and DPI validation."
+      "successfulRunId": 35909733498,
+      "successfulRunNumber": 1,
+      "successfulCommitSha": "27824a639ab31103728f1192d9a0185672c8c7db",
+      "runner": "windows-2025",
+      "bundleFile": "CELE_v3.21.19_RC4_One_Click_Manual_Certification_Windows.zip",
+      "bundleSha256": "fc33309464771409e3f43b98bc92a796d3a97f1e533dda4cd4595c498ec11989",
+      "artifactId": 10772328928,
+      "artifactName": "CELE-v3.21.19-RC4-One-Click-Manual-Certification-Windows",
+      "artifactDigest": "sha256:0ce1f99e123dd8917bbba21456bb484c1a457b007f77ae3d79d052210d0ddf37",
+      "artifactSizeBytes": 438402908,
+      "artifactExpiresAtUtc": "2026-12-22T19:30:06Z",
+      "note": "Definitive RC4 human-retest bundle. Always reinstalls corrected RC4 over any older 0.3.6 candidate and explicitly checks Practice, Progress, Sources & AI, and System before PDF/OCR and DPI checks."
     }
   },
   "manualGates": {
     "nativeFilePicker": {
-      "status": "PENDING_RC4_HUMAN_RETEST",
+      "status": "READY_FOR_RC4_HUMAN_RETEST",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": []
     },
     "displayAndDpi": {
-      "status": "PENDING_RC4_HUMAN_RETEST",
+      "status": "READY_FOR_RC4_HUMAN_RETEST",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": []

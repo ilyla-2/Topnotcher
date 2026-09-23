@@ -2,15 +2,6 @@ name: CELE v3.21.19 RC4 Manual Certification Bundle
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/cele-manual-cert-bundle-v32119.yml'
-      - 'manual-certification/run-v32119-desktop-ui-cert.ps1'
-      - 'manual-certification/v3.21.19-manual-desktop-ui-evidence-template.json'
-      - 'manual-certification/RUN-ME-v32119.cmd'
-      - 'docs/V3_21_19_RC4_MANUAL_CERT.md'
-
 permissions:
   contents: read
   actions: read

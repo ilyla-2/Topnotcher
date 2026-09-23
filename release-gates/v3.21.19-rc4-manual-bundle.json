@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "phase": "v3.21.19-rc4-manual-certification-bundle",
+  "status": "PASS",
+  "releaseReady": false,
+  "publicReleaseApproved": false,
+  "supersedes": {
+    "phase": "v3.21.16",
+    "reason": "RC2 manual execution exposed a real startup/dropdown interaction defect; old kit must not be used for release approval."
+  },
+  "sourceRc4": {
+    "runId": 35908267625,
+    "artifactId": 10771838377,
+    "artifactDigest": "sha256:f889706835206cb5a2b86807d88ceaed7ccbcedc6c2091fadd64f4f9cd59ccc2",
+    "installerSha256": "7ec4f3db339803f431b7ab081f325c19e17ffc1adbffa28dd8dd1536154696f6"
+  },
+  "bundle": {
+    "file": "CELE_v3.21.19_RC4_One_Click_Manual_Certification_Windows.zip",
+    "sha256": "fc33309464771409e3f43b98bc92a796d3a97f1e533dda4cd4595c498ec11989",
+    "artifactId": 10772328928,
+    "artifactName": "CELE-v3.21.19-RC4-One-Click-Manual-Certification-Windows",
+    "artifactDigest": "sha256:0ce1f99e123dd8917bbba21456bb484c1a457b007f77ae3d79d052210d0ddf37",
+    "artifactSizeBytes": 438402908,
+    "expiresAtUtc": "2026-12-22T19:30:06Z"
+  },
+  "manualChecks": [
+    "Practice opens and closes",
+    "Progress opens and closes",
+    "Sources & AI opens and closes",
+    "System opens and closes",
+    "native file picker opens and valid PDF imports",
+    "native page render/OCR works",
+    "cancel and invalid-PDF rejection are stable",
+    "100/125/150/200 percent DPI visual checks"
+  ]
+}
