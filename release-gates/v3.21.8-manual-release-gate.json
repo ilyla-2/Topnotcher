@@ -216,12 +216,13 @@
     "versionUpgradeAutomation": {
       "status": "CONFIGURED",
       "phase": "v3.21.14",
-      "baseline": "exact frozen RC2 0.3.6",
-      "upgradeFixture": "certification-only 0.3.7",
-      "sameIdentifier": "com.ace.celetopnotcher",
-      "nativeDataPreservationRequired": true,
+      "fromVersion": "0.3.6",
+      "toVersion": "0.3.7",
+      "sourceRc2RunId": 35897863593,
+      "sourceRc2ArtifactId": 10767244775,
       "latestSuccessfulRunId": null,
-      "artifactId": null
+      "evidenceArtifactId": null,
+      "note": "Automates a real version-to-version installer transition with pre/post 13-check installed WebView2/Tauri IPC. User-data persistence remains unasserted."
     }
   },
   "manualGates": {
@@ -238,7 +239,7 @@
       "evidenceRefs": []
     },
     "installedAppLifecycle": {
-      "status": "AUTOMATED_BASELINE_PASS_UPGRADE_RUN_PENDING",
+      "status": "AUTOMATED_CORE_PASS_VERSION_UPGRADE_RUNNING_MANUAL_UI_PENDING",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": [

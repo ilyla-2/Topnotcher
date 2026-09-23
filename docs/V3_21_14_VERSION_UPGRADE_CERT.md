@@ -1,7 +1,9 @@
 # CELE Topnotcher OS — v3.21.14 Version-to-Version Upgrade Certification
 
-This certification installs exact frozen RC2 version 0.3.6, launches it through the real reviewed frontend/native IPC path to create native state, then installs a certification-only 0.3.7 package with the same public identifier.
+This phase tests a real Windows version transition rather than a same-version reinstall.
 
-Before launching the upgraded app, the workflow requires the entire native Topnotcher Data file tree to remain byte-for-byte unchanged. It then launches 0.3.7 and requires the 13-check IPC certificate, followed by a clean uninstall.
+The test installs the exact frozen unsigned RC2 version 0.3.6, confirms its installed application passes all 13 WebView2/Tauri IPC checks, then builds an unsigned 0.3.7 upgrade installer from the same certified frontend/compiler/native baseline and the same public identifier `com.ace.celetopnotcher`.
 
-The 0.3.7 package is a certification fixture only and is never a public release candidate.
+The 0.3.7 installer is installed over 0.3.6. The workflow requires Windows uninstall registration to advance to 0.3.7, the installed executable to match the executable embedded in the 0.3.7 installer, all 13 IPC checks to pass after upgrade, and uninstall to remove the registered application/executable.
+
+This test deliberately does not claim user-data persistence, human file-picker interaction, DPI/visual inspection, signing, or final redistribution approval.
