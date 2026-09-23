@@ -1,0 +1,91 @@
+name: CELE v3.21.8 Public Package Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cele-public-release-audit.yml'
+      - 'scripts/public-release-audit-v3218.py'
+      - 'release-gates/**'
+      - 'v3217_overlay_parts/**'
+      - 'CELE_v3_21_6_Cloud_Certification_Payload.zip'
+
+permissions:
+  contents: read
+
+jobs:
+  public-package-audit:
+    name: Frozen runtime redistribution pre-audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Reconstruct frozen v3.21.7 source payload
+        shell: python
+        run: |
+          import base64, hashlib, shutil, zipfile
+          from pathlib import Path
+
+          root = Path.cwd()
+          base = root / "CELE_v3_21_6_Cloud_Certification_Payload.zip"
+          parts = root / "v3217_overlay_parts"
+          dest = root / "cele-public-audit"
+          work = root / ".tmp-v3218-audit"
+
+          if work.exists():
+              shutil.rmtree(work)
+          if dest.exists():
+              shutil.rmtree(dest)
+          work.mkdir()
+          dest.mkdir()
+
+          with zipfile.ZipFile(base) as z:
+              z.extractall(work)
+
+          old = work / "foundation_0_3_5"
+          new = work / "foundation_0_3_6"
+          if not old.is_dir():
+              raise SystemExit("Missing v3.21.6 foundation_0_3_5")
+          old.rename(new)
+
+          names = ["part00.b64","part01.b64","part02.b64","part03.b64","part04.b64","part05a.b64","part05b.b64","part06.b64"]
+          encoded = "".join((parts / n).read_text(encoding="utf-8") for n in names)
+          overlay = base64.b64decode(encoded, validate=True)
+          if len(overlay) != 38518:
+              raise SystemExit(f"Overlay size mismatch: {len(overlay)}")
+          if hashlib.sha256(overlay).hexdigest() != "fa627fa31932f278efa5a8ad6ec5155be5fb9e40899ddc421380d18f7d07a75a":
+              raise SystemExit("Overlay digest mismatch")
+          overlay_path = work / "overlay.zip"
+          overlay_path.write_bytes(overlay)
+          with zipfile.ZipFile(overlay_path) as z:
+              z.extractall(work)
+          (work / "OVERLAY_MANIFEST.json").unlink(missing_ok=True)
+          overlay_path.unlink(missing_ok=True)
+
+          for p in work.iterdir():
+              target = dest / p.name
+              if p.is_dir():
+                  shutil.copytree(p, target, dirs_exist_ok=True)
+              else:
+                  shutil.copy2(p, target)
+          print("Reconstruction complete.")
+
+      - name: Run public redistribution pre-audit
+        shell: bash
+        run: |
+          mkdir -p release-audit
+          python scripts/public-release-audit-v3218.py --root cele-public-audit --out release-audit/v3.21.8-public-package-preaudit.json
+
+      - name: Upload audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CELE-v3.21.8-public-package-preaudit
+          path: release-audit/**
+          if-no-files-found: error
+          retention-days: 90

@@ -62,6 +62,19 @@ jobs:
               if automated.get(gate) != "PASS":
                   raise SystemExit(f"Automated gate is not PASS: {gate}")
 
+          prep = data.get("releasePreparation", {})
+          if prep.get("publicPackagePreAudit", {}).get("status") not in {"PRELIMINARY_PASS", "APPROVED"}:
+              raise SystemExit("Public package pre-audit has not passed.")
+          identity = prep.get("publisherIdentity", {})
+          if identity.get("status") != "APPROVED" or not identity.get("publisherName"):
+              raise SystemExit("Publisher identity is not approved.")
+          bundle = prep.get("productionBundleIdentifier", {})
+          if bundle.get("status") != "APPROVED" or not bundle.get("finalIdentifier") or bundle.get("migrationReviewed") is not True:
+              raise SystemExit("Production bundle identifier/migration review is incomplete.")
+          signing_provider = prep.get("signingProvider", {})
+          if signing_provider.get("status") != "APPROVED" or not signing_provider.get("provider") or not signing_provider.get("mechanism"):
+              raise SystemExit("Signing provider/mechanism is not approved.")
+
           manual = data.get("manualGates", {})
           required_manual = [
               "nativeFilePicker",

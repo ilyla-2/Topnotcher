@@ -19,6 +19,28 @@
     "frozenFrontendWebView2TauriIpc": "PASS",
     "nsisBuild": "PASS"
   },
+  "releasePreparation": {
+    "publicPackagePreAudit": {
+      "status": "PRELIMINARY_PASS",
+      "evidenceRef": "release-gates/v3.21.8-public-package-preaudit.json",
+      "note": "Source/runtime cleanliness pre-audit only; final signed installer redistribution review remains manual."
+    },
+    "publisherIdentity": {
+      "status": "PENDING",
+      "publisherName": null
+    },
+    "productionBundleIdentifier": {
+      "status": "PENDING",
+      "currentIdentifier": "local.cele.topnotcher.foundation",
+      "finalIdentifier": null,
+      "migrationReviewed": false
+    },
+    "signingProvider": {
+      "status": "PENDING",
+      "provider": null,
+      "mechanism": null
+    }
+  },
   "manualGates": {
     "nativeFilePicker": {
       "status": "PENDING",

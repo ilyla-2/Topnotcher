@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "phase": "v3.21.8-public-package-preaudit",
+  "sourcePayload": "CELE_v3_21_7_Cloud_Certification_Payload.zip",
+  "sourcePayloadSha256": "7a05613fb16d02771943b4d7e8ca5a23837f9852e66a70cc992f23a89f6f1422204",
+  "extractedFileCount": 207,
+  "frozenRuntimeManifestFiles": 103,
+  "frozenRuntimeHashCheck": "103/103 PASS",
+  "frozenCompilerSha256": "3133e9ea5259afd12dfc8f2ba7b7cc3cdc8b4e2b089ad86bad40936e504d0ef5",
+  "frozenHtmlSha256": "fc445a89a4d8bfb8130b04d1a392c7e0507444cb098deaeac53e2773494fe862",
+  "contentBoundary": {
+    "bundledReviewerOrSourcePdfs": 0,
+    "bundledSecretKeyContainers": 0,
+    "onlyPdfInCertificationSource": "foundation_0_3_6/tests/fixtures/native-cert-two-page.pdf",
+    "onlyPdfPurpose": "synthetic 2-page native certification fixture; outside runtime payload",
+    "onlyPdfSha256": "f2da9f346e5759428a5320d59c335f28a8cd5bf9ce44b85861a62b5743cdb927",
+    "sourceFamilyNamesInRuntime": "present as compiler/profile labels only; not treated as redistribution clearance"
+  },
+  "status": "PRELIMINARY_PASS",
+  "finalRedistributionReview": "PENDING",
+  "releaseReady": false,
+  "blockers": [
+    "final built installer must be reviewed, not only source/runtime staging",
+    "publisher identity is UNSET",
+    "production bundle identifier is still local.cele.topnotcher.foundation",
+    "Authenticode signing is not configured/verified",
+    "manual desktop gates remain pending"
+  ]
+}
