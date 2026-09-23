@@ -1,0 +1,56 @@
+name: CELE v3.21.10 Staging Contract Diagnostic
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cele-v32110-staging-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct certified source and inspect staging contract
+        shell: python
+        run: |
+          import base64, hashlib, shutil, zipfile, json
+          from pathlib import Path
+
+          root=Path.cwd()
+          tmp=root/".diag-rebuild"
+          if tmp.exists(): shutil.rmtree(tmp)
+          tmp.mkdir()
+          with zipfile.ZipFile(root/"CELE_v3_21_6_Cloud_Certification_Payload.zip") as z:
+              z.extractall(tmp)
+          (tmp/"foundation_0_3_5").rename(tmp/"foundation_0_3_6")
+          names=["part00.b64","part01.b64","part02.b64","part03.b64","part04.b64","part05a.b64","part05b.b64","part06.b64"]
+          raw=base64.b64decode("".join((root/"v3217_overlay_parts"/n).read_text() for n in names), validate=True)
+          assert hashlib.sha256(raw).hexdigest()=="fa627fa31932f278efa5a8ad6ec5155be5fb9e40899ddc421380d18f7d07a75a"
+          op=tmp/"overlay.zip"; op.write_bytes(raw)
+          with zipfile.ZipFile(op) as z: z.extractall(tmp)
+
+          front=tmp/"frontend_v3_21_0"
+          foundation=tmp/"foundation_0_3_6"
+          manifest=json.loads((front/"ASTRA_PAYLOAD_MANIFEST_v3_21_0.pending.json").read_text())
+          print("MANIFEST ENTRY:", manifest.get("entry"))
+          print("LIKELY BRIDGE FILES:")
+          for row in manifest["files"]:
+              p=row["path"]
+              if any(k in p.lower() for k in ["desktop","native","bridge","transport","api"]):
+                  print(" ",p)
+
+          text=(foundation/"scripts"/"task.mjs").read_text(encoding="utf-8")
+          lines=text.splitlines()
+          for needle in ["desktop-api.js","stage-certification","Staged exact reviewed payload"]:
+              print("")
+              print("EXCERPTS FOR:", needle)
+              for i,line in enumerate(lines):
+                  if needle in line:
+                      for j in range(max(0,i-8), min(len(lines),i+13)):
+                          print(f"{j+1:04d}: {lines[j]}")
+                      print("---")
