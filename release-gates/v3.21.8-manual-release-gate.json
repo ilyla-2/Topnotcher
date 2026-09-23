@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "phase": "v3.21.8-manual-release-gate",
+  "baseline": {
+    "automatedPhase": "v3.21.7",
+    "certifiedBranch": "certified/v3.21.7-windows-2025",
+    "commitSha": "9f5529ee96c4828faa897183182c799101b699f5",
+    "githubActionsRunId": 35888521612,
+    "runner": "windows-2025",
+    "cloudCertificationStatus": "PASS",
+    "evidenceArtifactId": 10764328348,
+    "evidenceArtifactSha256": "bb9832fbeafe895c7fe439e65511b59dfec78a3b5408e2e31ab2189979a07002",
+    "frozenCompilerSha256": "3133e9ea5259afd12dfc8f2ba7b7cc3cdc8b4e2b089ad86bad40936e504d0ef5"
+  },
+  "automatedGates": {
+    "portableStatic": "PASS",
+    "windowsNativePdfOcrStore": "PASS",
+    "tauriReleaseBuild": "PASS",
+    "frozenFrontendWebView2TauriIpc": "PASS",
+    "nsisBuild": "PASS"
+  },
+  "manualGates": {
+    "nativeFilePicker": {
+      "status": "PENDING",
+      "reviewedBy": null,
+      "reviewedAtUtc": null,
+      "evidenceRefs": []
+    },
+    "displayAndDpi": {
+      "status": "PENDING",
+      "reviewedBy": null,
+      "reviewedAtUtc": null,
+      "evidenceRefs": []
+    },
+    "installedAppLifecycle": {
+      "status": "PENDING",
+      "reviewedBy": null,
+      "reviewedAtUtc": null,
+      "evidenceRefs": []
+    },
+    "codeSigning": {
+      "status": "PENDING",
+      "reviewedBy": null,
+      "reviewedAtUtc": null,
+      "evidenceRefs": []
+    },
+    "redistributionReview": {
+      "status": "PENDING",
+      "reviewedBy": null,
+      "reviewedAtUtc": null,
+      "evidenceRefs": []
+    }
+  },
+  "nativeAdapterQA": "pending-manual-desktop-gates",
+  "releaseReady": false
+}

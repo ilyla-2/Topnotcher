@@ -1,15 +1,12 @@
 name: CELE v3.21.7 Windows WebView2 IPC Certification
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       windows_runner:
         description: Windows runner image
         required: true
-        default: windows-2022
+        default: windows-2025
         type: choice
         options:
           - windows-2022
@@ -158,7 +155,7 @@ jobs:
           path: |
             cele-cert/foundation_0_3_6/release/native-certification/**
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 90
 
       - name: Enforce WebView2 IPC certification result
         if: always()

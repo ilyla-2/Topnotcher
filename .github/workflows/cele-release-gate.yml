@@ -1,0 +1,104 @@
+name: CELE v3.21.8 Manual Release Gate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-manual-release-gate:
+    name: Fail-closed manual release gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate v3.21.8 release record
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          path = Path("release-gates/v3.21.8-manual-release-gate.json")
+          if not path.is_file():
+              raise SystemExit("Missing v3.21.8 manual release gate record.")
+
+          data = json.loads(path.read_text(encoding="utf-8"))
+          baseline = data.get("baseline", {})
+          expected = {
+              "commitSha": "9f5529ee96c4828faa897183182c799101b699f5",
+              "githubActionsRunId": 35888521612,
+              "runner": "windows-2025",
+              "cloudCertificationStatus": "PASS",
+              "evidenceArtifactSha256": "bb9832fbeafe895c7fe439e65511b59dfec78a3b5408e2e31ab2189979a07002",
+              "frozenCompilerSha256": "3133e9ea5259afd12dfc8f2ba7b7cc3cdc8f2ba7b7cc3cdc8b4e2b089ad86bad40936e504d0ef5"
+          }
+
+          # Keep the compiler check explicit rather than trusting a status flag.
+          if baseline.get("commitSha") != expected["commitSha"]:
+              raise SystemExit("Baseline commit mismatch.")
+          if baseline.get("githubActionsRunId") != expected["githubActionsRunId"]:
+              raise SystemExit("Baseline Actions run mismatch.")
+          if baseline.get("runner") != expected["runner"]:
+              raise SystemExit("Baseline runner mismatch.")
+          if baseline.get("cloudCertificationStatus") != "PASS":
+              raise SystemExit("Automated baseline is not PASS.")
+          if baseline.get("evidenceArtifactSha256") != expected["evidenceArtifactSha256"]:
+              raise SystemExit("Automated evidence digest mismatch.")
+          if baseline.get("frozenCompilerSha256") != "3133e9ea5259afd12dfc8f2ba7b7cc3cdc8b4e2b089ad86bad40936e504d0ef5":
+              raise SystemExit("Frozen compiler SHA-256 mismatch.")
+
+          automated = data.get("automatedGates", {})
+          required_automated = [
+              "portableStatic",
+              "windowsNativePdfOcrStore",
+              "tauriReleaseBuild",
+              "frozenFrontendWebView2TauriIpc",
+              "nsisBuild",
+          ]
+          for gate in required_automated:
+              if automated.get(gate) != "PASS":
+                  raise SystemExit(f"Automated gate is not PASS: {gate}")
+
+          manual = data.get("manualGates", {})
+          required_manual = [
+              "nativeFilePicker",
+              "displayAndDpi",
+              "installedAppLifecycle",
+              "codeSigning",
+              "redistributionReview",
+          ]
+          problems = []
+          for gate in required_manual:
+              record = manual.get(gate, {})
+              if record.get("status") != "APPROVED":
+                  problems.append(f"{gate}: status={record.get('status')!r}")
+                  continue
+              if not record.get("reviewedBy"):
+                  problems.append(f"{gate}: missing reviewedBy")
+              if not record.get("reviewedAtUtc"):
+                  problems.append(f"{gate}: missing reviewedAtUtc")
+              refs = record.get("evidenceRefs")
+              if not isinstance(refs, list) or not refs:
+                  problems.append(f"{gate}: missing evidenceRefs")
+
+          if problems:
+              raise SystemExit("Manual release gate remains blocked:\n- " + "\n- ".join(problems))
+
+          if data.get("nativeAdapterQA") != "approved":
+              raise SystemExit("All manual evidence may be present, but nativeAdapterQA is not explicitly approved.")
+          if data.get("releaseReady") is not True:
+              raise SystemExit("All gates may be approved, but releaseReady is not explicitly true.")
+
+          print("CELE v3.21.8 MANUAL RELEASE GATE: PASS")
+          print("All five manual gates contain explicit approval and evidence references.")
+
+      - name: Publish gate status
+        if: always()
+        shell: bash
+        run: |
+          echo "## CELE v3.21.8 Manual Release Gate" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "This workflow is intentionally fail-closed. A green result means the repository's signed-off manual evidence record is complete; it does not generate evidence by itself." >> "$GITHUB_STEP_SUMMARY"
