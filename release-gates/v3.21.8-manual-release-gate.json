@@ -212,6 +212,16 @@
         "installDirectoryResidualCount": 0
       },
       "versionToVersionUpgrade": "PENDING_SEPARATE_CERTIFICATION"
+    },
+    "versionUpgradeAutomation": {
+      "status": "CONFIGURED",
+      "phase": "v3.21.14",
+      "baseline": "exact frozen RC2 0.3.6",
+      "upgradeFixture": "certification-only 0.3.7",
+      "sameIdentifier": "com.ace.celetopnotcher",
+      "nativeDataPreservationRequired": true,
+      "latestSuccessfulRunId": null,
+      "artifactId": null
     }
   },
   "manualGates": {
@@ -228,7 +238,7 @@
       "evidenceRefs": []
     },
     "installedAppLifecycle": {
-      "status": "AUTOMATED_INSTALL_REINSTALL_UNINSTALL_PASS_UPGRADE_PENDING",
+      "status": "AUTOMATED_BASELINE_PASS_UPGRADE_RUN_PENDING",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": [

@@ -1,0 +1,100 @@
+name: CELE v3.21.14 Version Upgrade Certification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cele-upgrade-cert-v32114.yml'
+      - 'scripts/certify-version-upgrade-v32114.ps1'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  upgrade-cert:
+    name: Exact RC2 0.3.6 to certification 0.3.7
+    runs-on: windows-2025
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Select stable MSVC Rust
+        shell: pwsh
+        run: rustup default stable-x86_64-pc-windows-msvc
+
+      - name: Download exact frozen RC2
+        uses: actions/download-artifact@v4
+        with:
+          name: CELE-Topnotcher-OS-v3.21.12-RC2-UNSIGNED-Windows-x64
+          path: frozen-rc2
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ilyla-2/Topnotcher
+          run-id: 35897863593
+
+      - name: Reconstruct certified source
+        shell: python
+        run: |
+          import base64,hashlib,shutil,zipfile
+          from pathlib import Path
+          root=Path.cwd();tmp=root/".upgrade-src-tmp";out=root/"upgrade-src"
+          if tmp.exists():shutil.rmtree(tmp)
+          if out.exists():shutil.rmtree(out)
+          tmp.mkdir();out.mkdir()
+          with zipfile.ZipFile(root/"CELE_v3_21_6_Cloud_Certification_Payload.zip") as z:z.extractall(tmp)
+          (tmp/"foundation_0_3_5").rename(tmp/"foundation_0_3_6")
+          names=["part00.b64","part01.b64","part02.b64","part03.b64","part04.b64","part05a.b64","part05b.b64","part06.b64"]
+          raw=base64.b64decode("".join((root/"v3217_overlay_parts"/n).read_text() for n in names),validate=True)
+          assert hashlib.sha256(raw).hexdigest()=="fa627fa31932f278efa5a8ad6ec5155be5fb9e40899ddc421380d18f7d07a75a"
+          op=tmp/"o.zip";op.write_bytes(raw)
+          with zipfile.ZipFile(op) as z:z.extractall(tmp)
+          (tmp/"OVERLAY_MANIFEST.json").unlink(missing_ok=True);op.unlink()
+          for p in tmp.iterdir():
+              d=out/p.name
+              shutil.copytree(p,d,dirs_exist_ok=True) if p.is_dir() else shutil.copy2(p,d)
+
+      - name: Apply approved release identity/startup overlay
+        shell: pwsh
+        run: |
+          python scripts/apply-release-identity-v3219.py --foundation upgrade-src/foundation_0_3_6 --report upgrade-overlay.json
+
+      - name: Run version-to-version upgrade certificate
+        shell: pwsh
+        run: |
+          .\scripts\certify-version-upgrade-v32114.ps1 -Rc2ArtifactRoot .\frozen-rc2 -FoundationPath .\upgrade-src\foundation_0_3_6 -FrontendPath .\upgrade-src\frontend_v3_21_0 -OutputDirectory .\upgrade-evidence
+
+      - name: Summary
+        if: always()
+        shell: pwsh
+        run: |
+          Add-Content $env:GITHUB_STEP_SUMMARY '# CELE v3.21.14 — Version Upgrade Certification'
+          $p='upgrade-evidence\v3.21.14-upgrade-report.json'
+          if(Test-Path $p){
+            $r=Get-Content -Raw $p|ConvertFrom-Json
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Upgrade status:** $($r.status)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **0.3.6 → 0.3.7:** $($r.scope.versionToVersionUpgrade)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Native data preservation:** $($r.scope.nativeDataPreservationAcrossInstallerUpgrade)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Upgraded IPC:** $($r.scope.upgradedWebViewTauriIpc)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Upgraded uninstall:** $($r.scope.upgradedUninstall)"
+            Add-Content $env:GITHUB_STEP_SUMMARY '- **releaseReady:** false'
+          }
+
+      - name: Upload upgrade evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CELE-v3.21.14-version-upgrade-evidence
+          path: upgrade-evidence/**
+          if-no-files-found: warn
+          retention-days: 90
