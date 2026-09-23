@@ -186,27 +186,32 @@
       "sourceRcArtifactId": 10767244775,
       "sourceRcArtifactDigest": "sha256:12c160beb5959ae93144ee3a8ca05abade210d6403724f381a0baeec2cb255ce",
       "successfulRunId": 35899158734,
-      "successfulRunNumber": 1,
-      "successfulCommitSha": "a06b563eb617ca008758ecc8045397264f0842bd",
       "runner": "windows-2025",
-      "frozenBranch": "certified/v3.21.13-installed-rc2-lifecycle",
       "evidenceArtifactId": 10768276647,
       "evidenceArtifactDigest": "sha256:1123b21265fcd90c3d3749e67e22382585ebbd51e049dc83613f6ba24143e542",
-      "evidenceExpiresAtUtc": "2026-12-22T17:57:30Z",
-      "checks": {
-        "exactRc2Hashes": "PASS",
-        "silentInstall": "PASS",
-        "installedExecutableMatchesInstallerEmbeddedBytes": "PASS",
-        "firstInstalledWebViewTauriIpc": "PASS_13_OF_13",
-        "sameVersionReinstall": "PASS",
-        "postReinstallWebViewTauriIpc": "PASS_13_OF_13",
-        "silentUninstall": "PASS",
-        "uninstallRegistryResidual": "NONE",
-        "executableResidual": "NONE",
-        "installDirectoryResiduals": 0
-      },
       "installedExecutableSha256": "5b57346d78fb6eea84b4aaffa94ef50ecd466aa58086d040cab7d7e5d09f6fa4",
-      "note": "Automated installed-app lifecycle is proven for exact unsigned RC2. This does not certify human file-picker interaction, DPI/visual behavior, version-to-version upgrade, signing, or final redistribution."
+      "installedMatchesEmbeddedInstallerExecutable": true,
+      "firstInstalledLaunch": {
+        "status": "PASS",
+        "checks": "13/13",
+        "reportSha256": "bb160cda826311796b643e46fe864280920d1b10c234befe7b9e9497f28c7471"
+      },
+      "sameVersionReinstall": {
+        "status": "PASS",
+        "exitCode": 0
+      },
+      "postReinstallLaunch": {
+        "status": "PASS",
+        "checks": "13/13",
+        "reportSha256": "8d6711a74eb16387b66c656295e316f67c57e0c5a2a77ef0f24649f779160563"
+      },
+      "uninstall": {
+        "status": "PASS",
+        "registryEntryRemaining": false,
+        "executableRemaining": false,
+        "installDirectoryResidualCount": 0
+      },
+      "versionToVersionUpgrade": "PENDING_SEPARATE_CERTIFICATION"
     }
   },
   "manualGates": {
@@ -223,13 +228,12 @@
       "evidenceRefs": []
     },
     "installedAppLifecycle": {
-      "status": "AUTOMATED_CORE_PASS_MANUAL_UI_AND_UPGRADE_PENDING",
+      "status": "AUTOMATED_INSTALL_REINSTALL_UNINSTALL_PASS_UPGRADE_PENDING",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": [
         "GitHub Actions run 35899158734",
-        "Artifact 10768276647",
-        "release-gates/v3.21.13-installed-rc2-lifecycle.json"
+        "Artifact 10768276647"
       ]
     },
     "codeSigning": {
