@@ -1,0 +1,90 @@
+name: CELE v3.21.17 UI Interaction Diagnostic
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cele-ui-diagnostic-v32117.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct frozen frontend and inspect interaction wiring
+        shell: python
+        run: |
+          import base64, hashlib, shutil, zipfile, re
+          from pathlib import Path
+
+          root=Path.cwd()
+          tmp=root/".ui-diag"
+          if tmp.exists(): shutil.rmtree(tmp)
+          tmp.mkdir()
+
+          with zipfile.ZipFile(root/"CELE_v3_21_6_Cloud_Certification_Payload.zip") as z:
+              z.extractall(tmp)
+          (tmp/"foundation_0_3_5").rename(tmp/"foundation_0_3_6")
+
+          names=["part00.b64","part01.b64","part02.b64","part03.b64","part04.b64","part05a.b64","part05b.b64","part06.b64"]
+          raw=base64.b64decode("".join((root/"v3217_overlay_parts"/n).read_text() for n in names),validate=True)
+          assert hashlib.sha256(raw).hexdigest()=="fa627fa31932f278efa5a8ad6ec5155be5fb9e40899ddc421380d18f7d07a75a"
+          op=tmp/"overlay.zip"; op.write_bytes(raw)
+          with zipfile.ZipFile(op) as z: z.extractall(tmp)
+
+          front=tmp/"frontend_v3_21_0"
+          print("FRONTEND:",front)
+          files=[p for p in front.rglob("*") if p.is_file() and p.suffix.lower() in {".html",".js",".css",".json"}]
+
+          needles=[
+              "Practice","Progress","dropdown","submenu","accordion","aria-expanded",
+              "nav-group","navGroup","toggle","sidebar","data-action","data-nav","route"
+          ]
+
+          for p in files:
+              try: text=p.read_text(encoding="utf-8")
+              except: continue
+              lines=text.splitlines()
+              matches=[]
+              for i,line in enumerate(lines):
+                  if any(n.lower() in line.lower() for n in needles):
+                      matches.append(i)
+              if matches:
+                  print("\n### FILE",p.relative_to(front),"###")
+                  shown=set()
+                  for i in matches:
+                      a=max(0,i-4); b=min(len(lines),i+8)
+                      key=(a,b)
+                      if key in shown: continue
+                      shown.add(key)
+                      for j in range(a,b):
+                          print(f"{j+1:05d}: {lines[j]}")
+                      print("---")
+
+          print("\n### SCRIPT ORDER ###")
+          html=(front/"CELE_Topnotcher_OS_v3_21_0.html").read_text(encoding="utf-8")
+          for m in re.finditer(r'<script[^>]+src=["\']([^"\']+)["\']',html,re.I):
+              print(m.group(1))
+
+          print("\n### INLINE HANDLER COUNTS ###")
+          for pat in ["onclick=", "onchange=", "ontoggle=", "addEventListener(", "querySelectorAll(", "closest("]:
+              total=0
+              places=[]
+              for p in files:
+                  if p.suffix.lower() not in {".html",".js"}: continue
+                  try:t=p.read_text(encoding="utf-8")
+                  except:continue
+                  c=t.count(pat)
+                  if c:
+                      total+=c; places.append((str(p.relative_to(front)),c))
+              print(pat,total,places)
+
+          print("\n### LIKELY NAV / MENU FILES ###")
+          for p in files:
+              name=str(p.relative_to(front)).lower()
+              if any(k in name for k in ["nav","shell","router","product","sidebar","ui","layout","app"]):
+                  print(p.relative_to(front))
