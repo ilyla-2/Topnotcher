@@ -21,7 +21,7 @@ permissions:
 jobs:
   certify-windows-webview-ipc:
     name: Native PDF/OCR + frozen frontend WebView2/Tauri IPC
-    runs-on: ${{ inputs.windows_runner || 'windows-2022' }}
+    runs-on: ${{ inputs.windows_runner || 'windows-2025' }}
     timeout-minutes: 70
 
     steps:
@@ -154,7 +154,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: CELE-v3.21.7-windows-webview-ipc-certification-evidence-${{ inputs.windows_runner || 'windows-2022' }}
+          name: CELE-v3.21.7-windows-webview-ipc-certification-evidence-${{ inputs.windows_runner || 'windows-2025' }}
           path: |
             cele-cert/foundation_0_3_6/release/native-certification/**
           if-no-files-found: warn
