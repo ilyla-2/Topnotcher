@@ -209,7 +209,6 @@ def main():
     reason="Reviewed v3.21.17 UI-interaction resilience patch; CELE data, analytics, engineering logic, and compiler unchanged."
     manifest["frontendVersion"]="v3.21.17-ui-interaction-resilience"
     update_row(manifest["files"],HTML_REL,sha(html),reason)
-    update_row(manifest["files"],PUBLIC_REL,sha(public_path),reason)
     update_row(manifest["files"],JS_REL,sha(js_path),reason)
     manifest_path.write_text(json.dumps(manifest,indent=2)+"\n",encoding="utf-8")
 
@@ -217,7 +216,7 @@ def main():
     new={x["path"]:x["sha256"] for x in manifest["files"]}
     changed=[p for p in old if old[p]!=new.get(p)]
     added=[p for p in new if p not in old]
-    unexpected=[p for p in changed if p not in {HTML_REL,PUBLIC_REL}]
+    unexpected=[p for p in changed if p!=HTML_REL]
     if unexpected or added!=[JS_REL]:
         raise SystemExit(f"Unexpected patch scope: changed={changed}, added={added}")
 
@@ -231,6 +230,7 @@ def main():
         "patchedPublicFiles":len(public["files"]),
         "changedBaselineFiles":changed,
         "addedFiles":added,
+        "metadataFilesChanged":[PUBLIC_REL,MANIFEST_REL],
         "compilerSha256":sha(compiler),
         "htmlSha256Before":BASE_HTML_SHA,
         "htmlSha256After":sha(html),
