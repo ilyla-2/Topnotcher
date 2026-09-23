@@ -37,9 +37,9 @@ jobs:
         shell: pwsh
         run: |
           $base = Join-Path $env:GITHUB_WORKSPACE 'CELE_v3_21_6_Cloud_Certification_Payload.zip'
-          $overlay = Join-Path $env:GITHUB_WORKSPACE 'CELE_v3_21_7_Overlay_From_v3_21_6.zip'
+          $parts = Join-Path $env:GITHUB_WORKSPACE 'v3217_overlay_parts'
           if (-not (Test-Path -LiteralPath $base -PathType Leaf)) { throw 'Missing v3.21.6 base payload.' }
-          if (-not (Test-Path -LiteralPath $overlay -PathType Leaf)) { throw 'Missing v3.21.7 overlay.' }
+          if (-not (Test-Path -LiteralPath $parts -PathType Container)) { throw 'Missing v3.21.7 overlay parts.' }
           $work = Join-Path $env:RUNNER_TEMP 'cele-v3217-rebuild'
           $dest = Join-Path $env:GITHUB_WORKSPACE 'cele-cert'
           if (Test-Path $work) { Remove-Item -Recurse -Force $work }
@@ -47,15 +47,15 @@ jobs:
           New-Item -ItemType Directory -Force -Path $work | Out-Null
           New-Item -ItemType Directory -Force -Path $dest | Out-Null
           $env:CELE_BASE_ZIP = $base
-          $env:CELE_OVERLAY_ZIP = $overlay
+          $env:CELE_OVERLAY_PARTS = $parts
           $env:CELE_REBUILD_DIR = $work
           $env:CELE_DEST_DIR = $dest
           @'
-          import os, shutil, zipfile
+          import os, shutil, zipfile, base64, hashlib
           from pathlib import Path
 
           base = Path(os.environ["CELE_BASE_ZIP"])
-          overlay = Path(os.environ["CELE_OVERLAY_ZIP"])
+          parts_dir = Path(os.environ["CELE_OVERLAY_PARTS"])
           work = Path(os.environ["CELE_REBUILD_DIR"])
           dest = Path(os.environ["CELE_DEST_DIR"])
 
@@ -67,6 +67,16 @@ jobs:
           if not src.is_dir():
               raise SystemExit("v3.21.6 base payload missing foundation_0_3_5")
           src.rename(dst)
+
+          overlay_b64 = "".join((parts_dir / f"part{i:02d}.b64").read_text(encoding="utf-8") for i in range(7))
+          overlay_bytes = base64.b64decode(overlay_b64, validate=True)
+          if len(overlay_bytes) != 38518:
+              raise SystemExit(f"Overlay size mismatch: {len(overlay_bytes)}")
+          overlay_sha = hashlib.sha256(overlay_bytes).hexdigest()
+          if overlay_sha != "fa627fa31932f278efa5a8ad6ec5155be5fb9e40899ddc421380d18f7d07a75a":
+              raise SystemExit(f"Overlay SHA256 mismatch: {overlay_sha}")
+          overlay = work / "v3217-overlay.zip"
+          overlay.write_bytes(overlay_bytes)
 
           with zipfile.ZipFile(overlay) as z:
               z.extractall(work)
