@@ -62,7 +62,7 @@ jobs:
               return None
 
           jsfiles=[p for p in front.rglob('*.js') if p.is_file()]
-          targets=['processIntakeFile','updateScanPreview','refreshOcrBackendV15','renderPdfPageV14','bridgeOcrPageV15','nativeOcrPageV14','ocrPageV15']
+          targets=['processIntakeFile','extractPdfTextSmartV5','extractPdfTextV5','extractPdfTextBasic','analyzeScannedPdf','fileFingerprint','countPdfPagesV6','ensureBridgePdfV14','updateScanPreview','refreshOcrBackendV15','renderPdfPageV14','bridgeOcrPageV15','nativeOcrPageV14','ocrPageV15']
           for name in targets:
               print('\n### FUNCTION',name,'###')
               found=False
@@ -74,6 +74,22 @@ jobs:
                       print(body[:30000])
                       found=True
               if not found:print('NOT FOUND')
+
+          print('\n### RUST REGISTER SOURCE PDF COMMAND ###')
+          rust=out/'foundation_0_3_6'/'src-tauri'/'src'/'pdf_ocr.rs'
+          rs=rust.read_text(encoding='utf-8',errors='ignore')
+          for name in ['register_source_pdf','page_count_bytes']:
+              print('\nRUST FUNCTION',name)
+              m=re.search(r'(?:pub\s+)?(?:async\s+)?fn\s+'+re.escape(name)+r'\s*\([^)]*\)[^{]*\{',rs,re.S)
+              if not m:
+                  print('NOT FOUND'); continue
+              brace=rs.find('{',m.start());depth=0
+              for i in range(brace,len(rs)):
+                  if rs[i]=='{':depth+=1
+                  elif rs[i]=='}':
+                      depth-=1
+                      if depth==0:
+                          print(rs[m.start():i+1][:30000]);break
 
           print('\n### NATIVE DOCUMENT TRANSPORT ###')
           p=front/'assets/js/00-native-document-transport-v3210.js'
