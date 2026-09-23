@@ -109,7 +109,7 @@
       "note": "First successful unsigned Windows release candidate. Suitable for controlled manual file-picker, DPI, and installed-app lifecycle certification only. Signing and final redistribution approval remain pending."
     },
     "installedLifecycleAutomation": {
-      "status": "RETRY_AFTER_REGISTRY_PATH_NORMALIZATION",
+      "status": "RETRY_AFTER_NSIS_EMBEDDED_BINARY_VERIFICATION",
       "phase": "v3.21.11",
       "workflow": ".github/workflows/cele-installed-lifecycle-v32111.yml",
       "sourceRcRunId": 35894857839,
@@ -117,9 +117,13 @@
       "latestSuccessfulRunId": null,
       "artifactId": null,
       "artifactDigest": null,
-      "note": "Run #1 silently installed exact RC1, then the harness misparsed a quoted NSIS InstallLocation. Path normalization was corrected; application/installer bytes are unchanged.",
-      "failedRunId": 35896869052,
-      "failedRunClassification": "HARNESS_REGISTRY_QUOTING"
+      "note": "Run #2 proved exact RC1 installer install but found the installed EXE differs from the sibling standalone EXE. Harness now extracts the exact frozen NSIS installer before install and requires the installed EXE to match the installer-embedded executable bytes instead of assuming standalone and bundled binaries are identical.",
+      "failedRunId": 35897039298,
+      "failedRunClassification": "HARNESS_ASSUMED_STANDALONE_EXE_EQUALS_NSIS_EMBEDDED_EXE",
+      "previousFailedRunIds": [
+        35896869052,
+        35897039298
+      ]
     }
   },
   "manualGates": {

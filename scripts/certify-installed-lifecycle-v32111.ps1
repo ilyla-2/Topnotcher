@@ -159,6 +159,30 @@ if ($exeSha -ne $ExpectedExeSha) { throw "RC1 executable hash mismatch: $exeSha"
 if ((Get-AuthenticodeSignature -LiteralPath $installer.FullName).Status -ne [System.Management.Automation.SignatureStatus]::NotSigned) { throw "Frozen RC1 installer signature state changed." }
 if ((Get-AuthenticodeSignature -LiteralPath $portableExe.FullName).Status -ne [System.Management.Automation.SignatureStatus]::NotSigned) { throw "Frozen RC1 executable signature state changed." }
 
+Section "Resolve executable bytes embedded in exact NSIS installer"
+$sevenZip = Get-Command 7z.exe -ErrorAction SilentlyContinue
+if (-not $sevenZip) { $sevenZip = Get-Command 7z -ErrorAction SilentlyContinue }
+if (-not $sevenZip) { throw "7-Zip is unavailable; cannot verify installer-embedded application bytes." }
+$nsisExtract = Join-Path $env:RUNNER_TEMP "cele-v32111-nsis-extracted"
+if (Test-Path -LiteralPath $nsisExtract) { Remove-Item -Recurse -Force -LiteralPath $nsisExtract }
+New-Item -ItemType Directory -Force -Path $nsisExtract | Out-Null
+& $sevenZip.Source x "-o$nsisExtract" "-y" $installer.FullName | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "Could not extract frozen RC1 NSIS installer." }
+$embeddedExeFiles = @(Get-ChildItem -LiteralPath $nsisExtract -Recurse -File -ErrorAction Stop | Where-Object { $_.Name -eq "CELE-Topnotcher-OS.exe" })
+if ($embeddedExeFiles.Count -eq 0) { throw "NSIS extraction did not expose CELE-Topnotcher-OS.exe." }
+$embeddedExeRecords = @()
+$embeddedHashes = New-Object System.Collections.Generic.HashSet[string]
+foreach ($f in $embeddedExeFiles) {
+  $h = Sha256 $f.FullName
+  [void]$embeddedHashes.Add($h)
+  $embeddedExeRecords += [ordered]@{
+    relativePath = $f.FullName.Substring($nsisExtract.Length).TrimStart('\','/')
+    bytes = $f.Length
+    sha256 = $h
+  }
+}
+Write-Host "NSIS embedded application hashes: $($embeddedHashes -join ', ')"
+
 $existing = Get-CeleUninstallEntry
 if ($existing) { throw "Runner is not clean: CELE Topnotcher OS is already registered before lifecycle test." }
 
@@ -177,7 +201,9 @@ $installedExe = Resolve-InstalledExe $entry
 if (-not $installedExe) { throw "Could not locate installed CELE-Topnotcher-OS.exe." }
 $installDir = Split-Path -Parent $installedExe
 $installedSha = Sha256 $installedExe
-if ($installedSha -ne $ExpectedExeSha) { throw "Installed application hash does not match frozen RC1 EXE: $installedSha" }
+if (-not $embeddedHashes.Contains($installedSha)) {
+  throw "Installed application hash is not present in the exact frozen NSIS payload: $installedSha"
+}
 
 Section "Launch installed app through real WebView2/Tauri IPC"
 $firstReport = Join-Path $OutputDirectory "installed-webview-ipc-first.json"
@@ -190,7 +216,9 @@ $entryAfterRepair = Get-CeleUninstallEntry
 if (-not $entryAfterRepair) { throw "Uninstall registration disappeared after same-version reinstall." }
 $installedExeAfterRepair = Resolve-InstalledExe $entryAfterRepair
 if (-not $installedExeAfterRepair) { throw "Installed EXE missing after same-version reinstall." }
-if ((Sha256 $installedExeAfterRepair) -ne $ExpectedExeSha) { throw "Installed EXE hash changed after same-version reinstall." }
+$installedShaAfterRepair = Sha256 $installedExeAfterRepair
+if ($installedShaAfterRepair -ne $installedSha) { throw "Installed EXE hash changed after same-version reinstall." }
+if (-not $embeddedHashes.Contains($installedShaAfterRepair)) { throw "Reinstalled EXE does not match exact frozen NSIS payload." }
 
 $secondReport = Join-Path $OutputDirectory "installed-webview-ipc-after-reinstall.json"
 $secondLaunch = Run-InstalledWebViewCertificate -ExePath $installedExeAfterRepair -ReportPath $secondReport -Label "post-reinstall-launch"
@@ -239,12 +267,16 @@ $report = [ordered]@{
     displayVersion = [string]$entry.DisplayVersion
     installedExecutable = $installedExe
     installedExecutableSha256 = $installedSha
+    standaloneRcExecutableSha256 = $exeSha
+    embeddedInstallerExecutables = $embeddedExeRecords
+    installedMatchesEmbeddedInstallerExecutable = $true
+    standaloneAndInstalledByteIdentical = ($installedSha -eq $exeSha)
     installDirectory = $installDir
   }
   firstInstalledLaunch = $firstLaunch
   sameVersionReinstall = [ordered]@{
     exitCode = $repair.ExitCode
-    executableSha256After = Sha256 $installedExeAfterRepair
+    executableSha256After = $installedShaAfterRepair
     launch = $secondLaunch
     note = "This is a same-version reinstall/repair check, not a version-to-version upgrade certification."
   }
