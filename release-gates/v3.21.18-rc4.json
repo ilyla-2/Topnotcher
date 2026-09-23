@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "phase": "v3.21.18-ocr-startup-rootfix-rc4",
+  "status": "PASS",
+  "releaseReady": false,
+  "publicReleaseApproved": false,
+  "sourceCommitSha": "3bf65bd9d147d566a739ec22c88d361d9af18c07",
+  "frozenBranch": "rc/v3.21.18-windows-rc4-unsigned",
+  "githubActions": {
+    "runId": 35908267625,
+    "runNumber": 3,
+    "runner": "windows-2025",
+    "conclusion": "success"
+  },
+  "rootCause": {
+    "finding": "CSP extraction omitted UI helpers referenced eagerly by wire(), aborting startup before compact-navigation wiring.",
+    "restoredSymbols": [
+      "nativeOcrCurrentScanPage",
+      "nativeOcrAllScanPages",
+      "clampScanRangeV12"
+    ],
+    "dependencyAuditRunId": 35908035244
+  },
+  "browserRegression": {
+    "status": "PASS",
+    "nativeHandlers": {
+      "practice": true,
+      "progress": true,
+      "sources": true,
+      "system": true
+    },
+    "interactionSelfTest": "PASS",
+    "clusterCount": 4,
+    "focusTools": "PASS",
+    "pageErrors": 0,
+    "ocrHelpers": {
+      "range": true,
+      "current": true,
+      "all": true,
+      "api": true
+    }
+  },
+  "publicStartupWebViewTauriIpc": "PASS_13_OF_13",
+  "installerAudit": {
+    "status": "PASS",
+    "forbiddenFiles": 0,
+    "forbiddenPaths": 0,
+    "privateMarkerHits": 0,
+    "secretPatternHits": 0
+  },
+  "artifact": {
+    "id": 10771838377,
+    "name": "CELE-Topnotcher-OS-v3.21.18-RC4-UNSIGNED-Windows-x64",
+    "digest": "sha256:f889706835206cb5a2b86807d88ceaed7ccbcedc6c2091fadd64f4f9cd59ccc2",
+    "bytes": 446605868,
+    "expiresAtUtc": "2026-12-22T19:17:00Z"
+  },
+  "archiveSha256": "46bf88a729c2d142f92721de791526ef9e61768c40bde8af20c0d64bf6953bdd",
+  "executable": {
+    "file": "CELE-Topnotcher-OS-v3.21.18-RC4-unsigned.exe",
+    "bytes": 10355712,
+    "sha256": "025eea1ac4dbb9cd1f1de825e37c20580004388f9c0b955e302a9f80005cf850",
+    "authenticode": "NotSigned"
+  },
+  "installer": {
+    "file": "CELE-Topnotcher-OS-v3.21.18-RC4-unsigned-setup.exe",
+    "bytes": 219111773,
+    "sha256": "7ec4f3db339803f431b7ab081f325c19e17ffc1adbffa28dd8dd1536154696f6",
+    "authenticode": "NotSigned"
+  },
+  "compilerSha256": "3133e9ea5259afd12dfc8f2ba7b7cc3cdc8b4e2b089ad86bad40936e504d0ef5",
+  "manualUiCertification": "PENDING_RC4_HUMAN_RETEST"
+}

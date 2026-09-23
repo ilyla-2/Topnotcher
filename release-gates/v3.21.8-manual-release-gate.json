@@ -251,7 +251,7 @@
       "note": "Certification-only 0.3.7 verified the exact RC2 0.3.6 -> 0.3.7 installer transition, native-data preservation before upgraded launch, post-upgrade IPC, and clean uninstall. It is not a public release."
     },
     "manualDesktopUiKit": {
-      "status": "READY_FOR_USER_EXECUTION",
+      "status": "SUPERSEDED_BY_RC4_MANUAL_KIT",
       "phase": "v3.21.15",
       "script": "manual-certification/run-v32115-desktop-ui-cert.ps1",
       "exactRc2InstallerSha256": "6d5b378d3c46850c6f55e1046c9880f6fe8fa6b030bc23fc2d4cacddaa5d7d3b",
@@ -259,7 +259,7 @@
       "note": "Guided human certification for native file-picker interaction and 100/125/150/200% DPI visual behavior. It records evidence but cannot auto-approve."
     },
     "manualDesktopUiBundle": {
-      "status": "PACKAGED_AND_VERIFIED",
+      "status": "SUPERSEDED_BY_RC4_MANUAL_KIT",
       "phase": "v3.21.16",
       "workflow": ".github/workflows/cele-manual-cert-bundle-v32116.yml",
       "successfulRunId": 35901820040,
@@ -280,7 +280,7 @@
       "note": "Self-contained controlled-test bundle containing exact frozen RC2 plus v3.21.15 human file-picker/DPI kit and RUN-ME launcher. Manual gates remain pending until evidence is executed and reviewed."
     },
     "uiInteractionRepair": {
-      "status": "RC3_AUTOMATED_PASS_SUPERSEDED_BY_ROOT_FIX",
+      "status": "SUPERSEDED_BY_V32118_ROOT_FIX_RC4_PASS",
       "phase": "v3.21.17",
       "finding": "Manual RC2 test found multiple sidebar dropdown groups unresponsive.",
       "affectedSharedSurface": [
@@ -292,43 +292,64 @@
       "repair": "Capture-phase delegated cluster toggles plus Focus Tools fallback",
       "compilerChanged": false,
       "questionDataChanged": false,
-      "latestSuccessfulRunId": null,
+      "latestSuccessfulRunId": 35905527622,
       "artifactId": 10771645298,
       "artifactDigest": "sha256:ce4789384c151010adf1da1b1bea5cf33248096a01d7b61d8f66b0845fc5a718",
       "successfulRunId": 35905527622
     },
     "ocrStartupRootFix": {
-      "status": "RC4_RETRY_AFTER_COMPLETE_WIRE_DEPENDENCY_AUDIT",
+      "status": "RC4_PASS_READY_FOR_HUMAN_RETEST",
       "phase": "v3.21.18",
-      "rootCause": "CSP extraction omitted three UI startup helpers referenced by wire(): nativeOcrCurrentScanPage, nativeOcrAllScanPages, and clampScanRangeV12. Because wire() evaluates handler assignments eagerly, the first missing symbol aborts the startup chain before compact-navigation wiring.",
-      "repair": "Pre-main compatibility module restores all three missing UI helpers. Full wire dependency audit found no other real missing definitions; RC3 interaction resilience remains layered as fallback.",
+      "rootCause": "CSP extraction omitted three UI startup helpers referenced by wire(), aborting startup before compact-navigation wiring.",
+      "restoredSymbols": [
+        "nativeOcrCurrentScanPage",
+        "nativeOcrAllScanPages",
+        "clampScanRangeV12"
+      ],
+      "wireDependencyAuditRunId": 35908035244,
+      "repair": "Pre-main compatibility module restores the full missing startup helper surface; v3.21.17 capture-phase sidebar interaction resilience remains layered as fallback.",
+      "successfulRunId": 35908267625,
+      "successfulRunNumber": 3,
+      "successfulCommitSha": "3bf65bd9d147d566a739ec22c88d361d9af18c07",
+      "frozenBranch": "rc/v3.21.18-windows-rc4-unsigned",
+      "browserRegression": {
+        "status": "PASS",
+        "nativeHandlers": "4/4",
+        "sidebarSelfTest": "4/4",
+        "focusTools": "PASS",
+        "pageErrors": 0
+      },
+      "webView2TauriIpc": "PASS_13_OF_13",
+      "installerAudit": "PASS",
+      "artifactId": 10771838377,
+      "artifactDigest": "sha256:f889706835206cb5a2b86807d88ceaed7ccbcedc6c2091fadd64f4f9cd59ccc2",
+      "installerSha256": "7ec4f3db339803f431b7ab081f325c19e17ffc1adbffa28dd8dd1536154696f6",
+      "executableSha256": "025eea1ac4dbb9cd1f1de825e37c20580004388f9c0b955e302a9f80005cf850",
       "compilerChanged": false,
-      "questionDataChanged": false,
+      "questionDataChanged": false
+    },
+    "manualDesktopUiRc4Kit": {
+      "status": "BUILDER_CONFIGURED",
+      "phase": "v3.21.19",
+      "sourceRc4RunId": 35908267625,
+      "sourceRc4ArtifactId": 10771838377,
+      "exactInstallerSha256": "7ec4f3db339803f431b7ab081f325c19e17ffc1adbffa28dd8dd1536154696f6",
+      "workflow": ".github/workflows/cele-manual-cert-bundle-v32119.yml",
       "latestSuccessfulRunId": null,
       "artifactId": null,
       "artifactDigest": null,
-      "latestFailedRunId": 35907502843,
-      "failedRunClassification": "SECOND_MISSING_CSP_EXTRACTED_STARTUP_HELPER",
-      "wireDependencyAuditRunId": 35908035244,
-      "missingRealSymbols": [
-        "clampScanRangeV12"
-      ],
-      "parserFalsePositives": [
-        "$",
-        "$$",
-        "async"
-      ]
+      "note": "Corrected human-certification kit always reinstalls RC4 and adds explicit Practice/Progress/Sources/System interaction checks before PDF/OCR and DPI validation."
     }
   },
   "manualGates": {
     "nativeFilePicker": {
-      "status": "BLOCKED_PENDING_RC4_ROOT_FIX",
+      "status": "PENDING_RC4_HUMAN_RETEST",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": []
     },
     "displayAndDpi": {
-      "status": "BLOCKED_PENDING_RC4_ROOT_FIX",
+      "status": "PENDING_RC4_HUMAN_RETEST",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": []

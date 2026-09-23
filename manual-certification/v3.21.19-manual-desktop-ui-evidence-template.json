@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "phase": "v3.21.19-manual-desktop-ui-certification",
+  "requiredRc4InstallerSha256": "7ec4f3db339803f431b7ab081f325c19e17ffc1adbffa28dd8dd1536154696f6",
+  "sidebarInteraction": {
+    "requiredChecks": [
+      "Practice opens and closes",
+      "Progress opens and closes",
+      "Sources & AI opens and closes",
+      "System opens and closes"
+    ]
+  },
+  "nativeFilePicker": {
+    "requiredChecks": [
+      "picker opens normally",
+      "valid PDF imports",
+      "native page rendering works",
+      "native OCR interaction works",
+      "cancel path causes no unintended mutation/crash",
+      "deliberately invalid PDF is rejected cleanly"
+    ]
+  },
+  "displayAndDpi": {
+    "requiredScalingPercent": [
+      100,
+      125,
+      150,
+      200
+    ],
+    "requiredChecks": [
+      "no critical clipped text",
+      "navigation reachable",
+      "dialogs/buttons reachable",
+      "representative study pages usable",
+      "document/OCR UI usable",
+      "no release-blocking unintended horizontal overflow"
+    ]
+  },
+  "approval": "PENDING_HUMAN_EXECUTION_AND_REVIEW",
+  "releaseReady": false
+}

@@ -1,14 +1,5 @@
 name: CELE v3.21.18 OCR Startup Root Fix RC4
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/cele-ocr-rootfix-v32118.yml'
-      - 'scripts/patch-ocr-ui-wire-v32118.py'
-      - 'scripts/audit-ocr-rootfix-v32118.py'
-      - 'scripts/test-ocr-rootfix-v32118.mjs'
-      - 'scripts/build-public-rc-v32118.ps1'
-      - 'scripts/audit-built-windows-rc-v32118.py'
   workflow_dispatch:
 permissions:
   contents: read

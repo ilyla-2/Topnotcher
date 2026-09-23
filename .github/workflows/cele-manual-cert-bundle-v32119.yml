@@ -1,0 +1,100 @@
+name: CELE v3.21.19 RC4 Manual Certification Bundle
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cele-manual-cert-bundle-v32119.yml'
+      - 'manual-certification/run-v32119-desktop-ui-cert.ps1'
+      - 'manual-certification/v3.21.19-manual-desktop-ui-evidence-template.json'
+      - 'manual-certification/RUN-ME-v32119.cmd'
+      - 'docs/V3_21_19_RC4_MANUAL_CERT.md'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  package:
+    runs-on: windows-2025
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download exact corrected RC4
+        uses: actions/download-artifact@v4
+        with:
+          name: CELE-Topnotcher-OS-v3.21.18-RC4-UNSIGNED-Windows-x64
+          path: frozen-rc4
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ilyla-2/Topnotcher
+          run-id: 35908267625
+
+      - name: Assemble corrected one-click kit
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $expected='7ec4f3db339803f431b7ab081f325c19e17ffc1adbffa28dd8dd1536154696f6'
+          $installer=Get-ChildItem -LiteralPath .\frozen-rc4 -Recurse -File -Filter 'CELE-Topnotcher-OS-v3.21.18-RC4-unsigned-setup.exe' | Select-Object -First 1
+          if(-not $installer){throw 'Corrected RC4 installer not found.'}
+          $actual=(Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($actual -ne $expected){throw "RC4 installer hash mismatch: $actual"}
+          if((Get-AuthenticodeSignature -LiteralPath $installer.FullName).Status -ne [System.Management.Automation.SignatureStatus]::NotSigned){throw 'RC4 signature state changed.'}
+
+          $kit=Join-Path $env:GITHUB_WORKSPACE 'CELE-v3.21.19-RC4-manual-certification'
+          if(Test-Path $kit){Remove-Item -Recurse -Force $kit}
+          New-Item -ItemType Directory -Force -Path $kit | Out-Null
+          Copy-Item -LiteralPath $installer.FullName -Destination (Join-Path $kit $installer.Name)
+          Copy-Item .\manual-certification\run-v32119-desktop-ui-cert.ps1 $kit
+          Copy-Item .\manual-certification\v3.21.19-manual-desktop-ui-evidence-template.json $kit
+          Copy-Item .\manual-certification\RUN-ME-v32119.cmd $kit
+          Copy-Item .\docs\V3_21_19_RC4_MANUAL_CERT.md (Join-Path $kit 'README.md')
+
+          $manifest=[ordered]@{
+            schemaVersion=1
+            phase='v3.21.19-rc4-manual-certification-bundle'
+            status='PACKAGED'
+            releaseReady=$false
+            publicReleaseApproved=$false
+            supersedes='v3.21.16 RC2 manual certification bundle'
+            installer=[ordered]@{
+              file=$installer.Name
+              bytes=$installer.Length
+              sha256=$actual
+              authenticode='NotSigned'
+              sourceRunId=35908267625
+              sourceArtifactId=10771838377
+              sourceArtifactDigest='sha256:f889706835206cb5a2b86807d88ceaed7ccbcedc6c2091fadd64f4f9cd59ccc2'
+            }
+            requiredHumanChecks=@(
+              'Practice/Progress/Sources & AI/System open and close',
+              'native file picker and valid PDF import',
+              'native render/OCR and invalid-PDF rejection',
+              '100/125/150/200 percent DPI visual checks'
+            )
+          }
+          $manifest|ConvertTo-Json -Depth 10|Set-Content (Join-Path $kit 'BUNDLE_MANIFEST.json') -Encoding UTF8
+
+          $hashes=@()
+          Get-ChildItem -LiteralPath $kit -File | Sort-Object Name | ForEach-Object {
+            $hashes += [ordered]@{file=$_.Name;bytes=$_.Length;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
+          }
+          $hashes|ConvertTo-Json -Depth 6|Set-Content (Join-Path $kit 'SHA256SUMS.json') -Encoding UTF8
+
+          $zip=Join-Path $env:GITHUB_WORKSPACE 'CELE_v3.21.19_RC4_One_Click_Manual_Certification_Windows.zip'
+          if(Test-Path $zip){Remove-Item -Force $zip}
+          Compress-Archive -Path (Join-Path $kit '*') -DestinationPath $zip -CompressionLevel Optimal
+          $zipSha=(Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          @{file=[IO.Path]::GetFileName($zip);bytes=(Get-Item $zip).Length;sha256=$zipSha;releaseReady=$false}|ConvertTo-Json|Set-Content (Join-Path $kit 'BUNDLE_ZIP_SHA256.json')
+          Write-Host "RC4 MANUAL BUNDLE SHA-256: $zipSha"
+
+      - name: Upload corrected manual certification bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: CELE-v3.21.19-RC4-One-Click-Manual-Certification-Windows
+          path: |
+            CELE-v3.21.19-RC4-manual-certification/**
+            CELE_v3.21.19_RC4_One_Click_Manual_Certification_Windows.zip
+          if-no-files-found: error
+          retention-days: 90
