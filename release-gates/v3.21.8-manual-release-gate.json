@@ -364,7 +364,7 @@
       "diagnosis": "Large preboard PDFs enter browser-side whole-file PDF parsing before native handling. The path can read/parse the same large file multiple times and later base64-serialize it for Tauri, creating a main-thread responsiveness risk on real hardware."
     },
     "largePdfIntakeResilience": {
-      "status": "PATCH_AUTHORED_AWAITING_RC5_STRESS_AND_BUILD",
+      "status": "RC5_AUTOMATED_PASS_AWAITING_REAL_PREBOARD_RETEST",
       "phase": "v3.21.20",
       "thresholdBytes": 8388608,
       "strategy": "On native Windows, PDFs >=8 MiB bypass browser-side whole-file parsing and route directly to native PDF/OCR. Large native PDF base64 transport is chunked with cooperative event-loop yields.",
@@ -376,12 +376,72 @@
       ],
       "compilerChanged": false,
       "questionDataChanged": false,
-      "trustSemanticsChanged": false
+      "trustSemanticsChanged": false,
+      "successfulRunId": 35914572661,
+      "artifactId": 10774129734
+    },
+    "publicReleaseCandidateRc5": {
+      "status": "RC5_BUILT_LARGE_PDF_STRESS_CERTIFIED_AND_AUDITED",
+      "phase": "v3.21.20",
+      "candidate": "RC5",
+      "platform": "windows-x64",
+      "signing": "UNSIGNED",
+      "distributionStatus": "CONTROLLED_MANUAL_CERTIFICATION_ONLY",
+      "successfulRunId": 35914572661,
+      "successfulRunNumber": 3,
+      "successfulCommitSha": "91722485fada7beaec45ef9b0f3ab8ea9d1e50e1",
+      "runner": "windows-2025",
+      "artifactId": 10774129734,
+      "artifactName": "CELE-Topnotcher-OS-v3.21.20-RC5-UNSIGNED-Windows-x64",
+      "artifactDigest": "sha256:c5f460b6b0acc14abc7f536dbfa84b17b68a7ce30388028dc27ef6b9a3f12446",
+      "artifactExpiresAtUtc": "2026-12-22T20:14:09Z",
+      "rcArchive": {
+        "file": "CELE_Topnotcher_OS_v3.21.20_RC5_UNSIGNED_Windows_x64.zip",
+        "sha256": "09c2ac003730f27bd08d6c0ef8df4af15942d3bdd3b401418856e24194200f9d"
+      },
+      "executable": {
+        "file": "CELE-Topnotcher-OS-v3.21.20-RC5-unsigned.exe",
+        "bytes": 10358272,
+        "sha256": "69d46d7f2669094c7dad834a38d4f30b8686e17b6412c59cc68f68b60da0ebc0",
+        "authenticodeStatus": "NotSigned"
+      },
+      "installer": {
+        "file": "CELE-Topnotcher-OS-v3.21.20-RC5-unsigned-setup.exe",
+        "bytes": 219112373,
+        "sha256": "9e6ffb1a8a04fea43087a7eb13dab55721d5cfbbf3d5ed816bb71a190fea85da",
+        "authenticodeStatus": "NotSigned"
+      },
+      "largePdfStress": {
+        "status": "PASS",
+        "fixtureBytes": 20971520,
+        "largeNativeRouteBytes": 10485760,
+        "route": "native-large",
+        "encoderEventLoopTicks": 58,
+        "encoderMs": 1265.1,
+        "routeEventLoopTicks": 31,
+        "routeMs": 688.8
+      },
+      "publicStartupIpc": "PASS_13_OF_13",
+      "builtInstallerAudit": {
+        "status": "PASS",
+        "extractedFiles": 8,
+        "extractedBytes": 223581469,
+        "forbiddenFiles": 0,
+        "forbiddenPaths": 0,
+        "privateMarkerHits": 0,
+        "secretPatternHits": 0
+      },
+      "compilerSha256": "3133e9ea5259afd12dfc8f2ba7b7cc3cdc8b4e2b089ad86bad40936e504d0ef5",
+      "compilerChanged": false,
+      "questionDataChanged": false,
+      "trustSemanticsChanged": false,
+      "releaseReady": false,
+      "note": "Automated stress removes the known RC4 browser whole-file parsing bottleneck for native PDFs >=8 MiB, but the exact real preboard PDF must be retested on the user's Windows machine before the native file-picker gate can return to PASS candidate."
     }
   },
   "manualGates": {
     "nativeFilePicker": {
-      "status": "FAIL_LARGE_PDF_INTAKE_HANG_RC4",
+      "status": "READY_FOR_RC5_REAL_PREBOARD_RETEST",
       "reviewedBy": "ace",
       "reviewedAtUtc": "2026-09-23T19:48:35.3689245Z",
       "evidenceRefs": [
@@ -389,7 +449,7 @@
       ]
     },
     "displayAndDpi": {
-      "status": "INVALID_RETEST_REQUIRED_AFTER_PDF_FIX",
+      "status": "RETEST_PENDING_AFTER_RC5_PDF_CONFIRMATION",
       "reviewedBy": "ace",
       "reviewedAtUtc": "2026-09-23T19:48:35.3689245Z",
       "evidenceRefs": [
@@ -422,6 +482,6 @@
       "evidenceRefs": []
     }
   },
-  "nativeAdapterQA": "failed-manual-large-pdf-intake-pending-fix-retest",
+  "nativeAdapterQA": "pending-rc5-real-preboard-and-dpi-retest",
   "releaseReady": false
 }
