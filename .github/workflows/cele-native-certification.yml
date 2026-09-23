@@ -96,7 +96,7 @@ jobs:
           required = [
               dest / "foundation_0_3_6" / "scripts" / "windows-certify-cloud-v3217.ps1",
               dest / "foundation_0_3_6" / "src-tauri" / "src" / "main.rs",
-              dest / "frontend_v3_21_0" / "index.html",
+              dest / "frontend_v3_21_0" / "CELE_Topnotcher_OS_v3_21_0.html",
           ]
           for p in required:
               if not p.exists():
