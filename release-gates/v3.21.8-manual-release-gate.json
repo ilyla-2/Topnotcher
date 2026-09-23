@@ -249,23 +249,31 @@
         "installDirectoryResiduals": 0
       },
       "note": "Certification-only 0.3.7 verified the exact RC2 0.3.6 -> 0.3.7 installer transition, native-data preservation before upgraded launch, post-upgrade IPC, and clean uninstall. It is not a public release."
+    },
+    "manualDesktopUiKit": {
+      "status": "READY_FOR_USER_EXECUTION",
+      "phase": "v3.21.15",
+      "script": "manual-certification/run-v32115-desktop-ui-cert.ps1",
+      "exactRc2InstallerSha256": "6d5b378d3c46850c6f55e1046c9880f6fe8fa6b030bc23fc2d4cacddaa5d7d3b",
+      "evidenceTemplate": "manual-certification/v3.21.15-manual-desktop-ui-evidence-template.json",
+      "note": "Guided human certification for native file-picker interaction and 100/125/150/200% DPI visual behavior. It records evidence but cannot auto-approve."
     }
   },
   "manualGates": {
     "nativeFilePicker": {
-      "status": "PENDING",
+      "status": "PENDING_USER_EXECUTION_V3_21_15",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": []
     },
     "displayAndDpi": {
-      "status": "PENDING",
+      "status": "PENDING_USER_EXECUTION_V3_21_15",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": []
     },
     "installedAppLifecycle": {
-      "status": "AUTOMATED_LIFECYCLE_AND_VERSION_UPGRADE_PASS_MANUAL_UI_PENDING",
+      "status": "AUTOMATED_LIFECYCLE_AND_VERSION_UPGRADE_PASS",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": [

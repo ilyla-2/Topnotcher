@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "phase": "v3.21.15-manual-desktop-ui-certification",
+  "requiredRc2InstallerSha256": "6d5b378d3c46850c6f55e1046c9880f6fe8fa6b030bc23fc2d4cacddaa5d7d3b",
+  "nativeFilePicker": {
+    "requiredChecks": [
+      "picker opens normally",
+      "valid PDF imports",
+      "native page rendering works",
+      "native OCR interaction works",
+      "cancel path causes no unintended mutation/crash",
+      "deliberately invalid PDF is rejected cleanly"
+    ]
+  },
+  "displayAndDpi": {
+    "requiredScalingPercent": [
+      100,
+      125,
+      150,
+      200
+    ],
+    "requiredChecks": [
+      "no critical clipped text",
+      "navigation reachable",
+      "dialogs/buttons reachable",
+      "representative study pages usable",
+      "document/OCR UI usable",
+      "no release-blocking unintended horizontal overflow"
+    ]
+  },
+  "approval": "PENDING_HUMAN_EXECUTION_AND_REVIEW",
+  "releaseReady": false
+}
