@@ -51,7 +51,7 @@
       "evidenceRef": "release-gates/v3.21.9-release-identity.json"
     },
     "publicReleaseCandidate": {
-      "status": "BUILDER_REVISED_STAGING_MAP",
+      "status": "BUILDER_REVISED_CERTIFIED_STAGING",
       "phase": "v3.21.10",
       "candidate": "RC1",
       "platform": "windows-x64",
@@ -62,12 +62,13 @@
       "artifactDigest": null,
       "executableSha256": null,
       "installerSha256": null,
-      "note": "Run #2 preserved the certified base identity but staged the frozen HTML under its source filename. The builder now maps the exact reviewed entry bytes to app/index.html, matching the certified foundation contract.",
-      "failedRunId": 35894173785,
-      "failedRunClassification": "CERTIFIED_FRONTEND_ENTRYPOINT_STAGING_GUARD",
+      "note": "RC1 now uses foundation scripts/release_tool.py stage-certification with the exact frozen manifest, preserving the foundation app shell and staging the reviewed 103-file payload under app/payload.",
+      "failedRunId": 35894332485,
+      "failedRunClassification": "CUSTOM_STAGING_REPLACED_BY_CERTIFIED_RELEASE_TOOL",
       "previousFailedRunIds": [
         35893752706,
-        35894173785
+        35894173785,
+        35894332485
       ]
     }
   },

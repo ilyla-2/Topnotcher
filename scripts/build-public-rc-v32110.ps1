@@ -73,42 +73,37 @@ try {
   Pop-Location
 }
 
-Section "Stage exact frozen frontend into production frontendDist"
-$frontendDistRaw = [string]$config.build.frontendDist
-if ([string]::IsNullOrWhiteSpace($frontendDistRaw)) {
-  throw "tauri.conf.json build.frontendDist is empty."
+Section "Stage exact reviewed frontend using certified release tool"
+$manifestPath = Join-Path $FrontendPath "ASTRA_PAYLOAD_MANIFEST_v3_21_0.pending.json"
+if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+  throw "Frozen frontend manifest is missing."
 }
-if ($frontendDistRaw -match "^[a-zA-Z]+://") {
-  throw "RC builder requires a local frontendDist, not a URL."
+Push-Location $FoundationPath
+try {
+  python scripts/release_tool.py stage-certification --source $FrontendPath --manifest $manifestPath
+  if ($LASTEXITCODE -ne 0) { throw "Certified payload staging failed." }
+  python scripts/release_tool.py verify
+  if ($LASTEXITCODE -ne 0) { throw "Foundation verification failed after payload staging." }
+} finally {
+  Pop-Location
 }
-$srcTauri = Join-Path $FoundationPath "src-tauri"
-$frontendDist = [System.IO.Path]::GetFullPath((Join-Path $srcTauri $frontendDistRaw))
-if (Test-Path -LiteralPath $frontendDist) {
-  Remove-Item -Recurse -Force -LiteralPath $frontendDist
-}
-New-Item -ItemType Directory -Force -Path $frontendDist | Out-Null
 
-$manifest = Get-Content -Raw -LiteralPath (Join-Path $FrontendPath "ASTRA_PAYLOAD_MANIFEST_v3_21_0.pending.json") | ConvertFrom-Json
-$stagedCount = 0
-foreach ($row in $manifest.files) {
+$activePayload = Join-Path $FoundationPath "release\active-payload.json"
+$payloadRoute = Join-Path $FoundationPath "app\payload.json"
+$payloadDir = Join-Path $FoundationPath "app\payload"
+if (-not (Test-Path -LiteralPath $activePayload -PathType Leaf)) { throw "active-payload.json was not produced." }
+if (-not (Test-Path -LiteralPath $payloadRoute -PathType Leaf)) { throw "app/payload.json was not produced." }
+if (-not (Test-Path -LiteralPath $payloadDir -PathType Container)) { throw "app/payload was not produced." }
+
+$stagedManifest = Get-Content -Raw -LiteralPath $activePayload | ConvertFrom-Json
+if ($stagedManifest.files.Count -ne 103) { throw "Certified staged payload file count is not 103." }
+foreach ($row in $stagedManifest.files) {
   $sourceFile = Join-Path $FrontendPath $row.path
-  if (-not (Test-Path -LiteralPath $sourceFile -PathType Leaf)) { throw "Frozen runtime source missing $($row.path)" }
-  $targetRel = [string]$row.path
-  if ($targetRel -eq [string]$manifest.entry) {
-    $targetRel = "index.html"
-  }
-  $stagedFile = Join-Path $frontendDist $targetRel
-  $stagedParent = Split-Path -Parent $stagedFile
-  if ($stagedParent) { New-Item -ItemType Directory -Force -Path $stagedParent | Out-Null }
-  Copy-Item -LiteralPath $sourceFile -Destination $stagedFile -Force
-  if ((Get-Sha256 $sourceFile) -ne (Get-Sha256 $stagedFile)) { throw "Staged runtime byte mismatch: $($row.path)" }
-  if ((Get-Sha256 $stagedFile) -ne ([string]$row.sha256).ToLowerInvariant()) { throw "Staged runtime manifest hash mismatch: $($row.path)" }
-  $stagedCount++
+  $stagedFile = Join-Path $payloadDir $row.path
+  if (-not (Test-Path -LiteralPath $stagedFile -PathType Leaf)) { throw "Certified staged runtime missing $($row.path)" }
+  if ((Get-Sha256 $sourceFile) -ne (Get-Sha256 $stagedFile)) { throw "Certified staged runtime byte mismatch: $($row.path)" }
 }
-if (-not (Test-Path -LiteralPath (Join-Path $frontendDist "index.html") -PathType Leaf)) {
-  throw "Reviewed frontend entrypoint was not mapped to app/index.html."
-}
-Write-Host "Frozen frontend staging verified: $stagedCount/$($manifest.files.Count) reviewed files; entrypoint mapped byte-identically to index.html."
+Write-Host "Certified release-tool staging verified: 103/103 frozen payload files."
 
 Section "Build unsigned production-identity Windows RC"
 Push-Location $FoundationPath
