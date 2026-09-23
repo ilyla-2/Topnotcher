@@ -1,0 +1,131 @@
+name: CELE v3.21.21 RC5 Real Preboard Retest Bundle
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cele-rc5-preboard-retest-bundle-v32121.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  package:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse-check retest PowerShell
+        shell: pwsh
+        run: |
+          $tokens=$null
+          $errors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path '.\manual-certification\run-v32121-rc5-preboard-retest.ps1').Path,
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if($errors.Count -gt 0){
+            $errors | ForEach-Object { Write-Error $_.Message }
+            throw 'RC5 preboard retest PowerShell has syntax errors.'
+          }
+          Write-Host 'RC5 preboard retest PowerShell syntax: PASS'
+
+      - name: Download exact RC5
+        uses: actions/download-artifact@v4
+        with:
+          name: CELE-Topnotcher-OS-v3.21.20-RC5-UNSIGNED-Windows-x64
+          path: frozen-rc5
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ilyla-2/Topnotcher
+          run-id: 35914572661
+
+      - name: Assemble focused one-click retest kit
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $expected='9e6ffb1a8a04fea43087a7eb13dab55721d5cfbbf3d5ed816bb71a190fea85da'
+          $installer=Get-ChildItem -LiteralPath .\frozen-rc5 -Recurse -File -Filter 'CELE-Topnotcher-OS-v3.21.20-RC5-unsigned-setup.exe' | Select-Object -First 1
+          if(-not $installer){throw 'Exact RC5 installer not found.'}
+          $actual=(Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($actual -ne $expected){throw "RC5 installer hash mismatch: $actual"}
+          if((Get-AuthenticodeSignature -LiteralPath $installer.FullName).Status -ne [System.Management.Automation.SignatureStatus]::NotSigned){throw 'RC5 signature state changed.'}
+
+          $kit=Join-Path $env:GITHUB_WORKSPACE 'CELE-v3.21.21-RC5-preboard-retest'
+          if(Test-Path $kit){Remove-Item -Recurse -Force $kit}
+          New-Item -ItemType Directory -Force -Path $kit | Out-Null
+
+          Copy-Item -LiteralPath $installer.FullName -Destination (Join-Path $kit $installer.Name)
+          Copy-Item .\manual-certification\run-v32121-rc5-preboard-retest.ps1 $kit
+          Copy-Item .\manual-certification\RUN-ME-v32121.cmd $kit
+          Copy-Item .\manual-certification\v3.21.21-rc5-preboard-retest-template.json $kit
+          Copy-Item .\docs\V3_21_21_RC5_PREBOARD_RETEST.md (Join-Path $kit 'README.md')
+
+          $manifest=[ordered]@{
+            schemaVersion=1
+            phase='v3.21.21-rc5-real-preboard-retest-bundle'
+            status='PACKAGED'
+            purpose='Focused real-machine regression for the preboard PDF hang found in RC4'
+            releaseReady=$false
+            publicReleaseApproved=$false
+            installer=[ordered]@{
+              file=$installer.Name
+              bytes=$installer.Length
+              sha256=$actual
+              authenticode='NotSigned'
+              sourceRunId=35914572661
+              sourceArtifactId=10774129734
+              sourceArtifactDigest='sha256:c5f460b6b0acc14abc7f536dbfa84b17b68a7ce30388028dc27ef6b9a3f12446'
+            }
+            automatedRc5Evidence=[ordered]@{
+              largePdfEdgeStress='PASS'
+              webViewTauriIpc='PASS_13_OF_13'
+              installerAudit='PASS'
+              compilerSha256='3133e9ea5259afd12dfc8f2ba7b7cc3cdc8b4e2b089ad86bad40936e504d0ef5'
+            }
+            focusedHumanChecks=@(
+              'same preboard PDF that froze RC4',
+              '90 second automatic Windows process responsiveness monitor',
+              'preboard import reaches document/page information',
+              'two-page native rendering',
+              'native OCR result',
+              'picker Cancel stability',
+              'invalid-PDF clean rejection'
+            )
+            excludedGates=@(
+              '100/125/150/200 percent DPI',
+              'Authenticode code signing',
+              'final redistribution review'
+            )
+          }
+          $manifest|ConvertTo-Json -Depth 12|Set-Content (Join-Path $kit 'BUNDLE_MANIFEST.json') -Encoding UTF8
+
+          $hashes=@()
+          Get-ChildItem -LiteralPath $kit -File | Sort-Object Name | ForEach-Object {
+            $hashes += [ordered]@{
+              file=$_.Name
+              bytes=$_.Length
+              sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            }
+          }
+          $hashes|ConvertTo-Json -Depth 8|Set-Content (Join-Path $kit 'SHA256SUMS.json') -Encoding UTF8
+
+          $zip=Join-Path $env:GITHUB_WORKSPACE 'CELE_v3.21.21_RC5_Real_Preboard_Retest_Windows.zip'
+          if(Test-Path $zip){Remove-Item -Force $zip}
+          Compress-Archive -Path (Join-Path $kit '*') -DestinationPath $zip -CompressionLevel Optimal
+          $zipSha=(Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          @{file=[IO.Path]::GetFileName($zip);bytes=(Get-Item $zip).Length;sha256=$zipSha;releaseReady=$false}|ConvertTo-Json|Set-Content (Join-Path $kit 'BUNDLE_ZIP_SHA256.json')
+          Write-Host "RC5 PREBOARD RETEST BUNDLE SHA-256: $zipSha"
+
+      - name: Upload RC5 preboard retest bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: CELE-v3.21.21-RC5-Real-Preboard-Retest-Windows
+          path: |
+            CELE-v3.21.21-RC5-preboard-retest/**
+            CELE_v3.21.21_RC5_Real_Preboard_Retest_Windows.zip
+          if-no-files-found: error
+          retention-days: 90
