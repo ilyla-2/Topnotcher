@@ -278,17 +278,34 @@
       "artifactSizeBytes": 438401966,
       "artifactExpiresAtUtc": "2026-12-22T18:20:52Z",
       "note": "Self-contained controlled-test bundle containing exact frozen RC2 plus v3.21.15 human file-picker/DPI kit and RUN-ME launcher. Manual gates remain pending until evidence is executed and reviewed."
+    },
+    "uiInteractionRepair": {
+      "status": "RC3_BUILD_RUNNING",
+      "phase": "v3.21.17",
+      "finding": "Manual RC2 test found multiple sidebar dropdown groups unresponsive.",
+      "affectedSharedSurface": [
+        "Practice",
+        "Progress",
+        "Sources & AI",
+        "System"
+      ],
+      "repair": "Capture-phase delegated cluster toggles plus Focus Tools fallback",
+      "compilerChanged": false,
+      "questionDataChanged": false,
+      "latestSuccessfulRunId": null,
+      "artifactId": null,
+      "artifactDigest": null
     }
   },
   "manualGates": {
     "nativeFilePicker": {
-      "status": "PENDING_USER_EXECUTION_V3_21_15",
+      "status": "BLOCKED_BY_UI_INTERACTION_REPAIR",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": []
     },
     "displayAndDpi": {
-      "status": "PENDING_USER_EXECUTION_V3_21_15",
+      "status": "BLOCKED_BY_UI_INTERACTION_REPAIR",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": []

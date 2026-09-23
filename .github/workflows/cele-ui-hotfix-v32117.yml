@@ -1,0 +1,157 @@
+name: CELE v3.21.17 UI Interaction Resilience RC3
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cele-ui-hotfix-v32117.yml'
+      - 'scripts/patch-ui-interactions-v32117.py'
+      - 'scripts/audit-ui-hotfix-v32117.py'
+      - 'scripts/test-ui-interactions-v32117.mjs'
+      - 'scripts/build-public-rc-v32117.ps1'
+      - 'scripts/audit-built-windows-rc-v32117.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-rc3:
+    name: Patch, browser-test, build and certify RC3
+    runs-on: windows-2025
+    timeout-minutes: 70
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Select stable MSVC Rust
+        shell: pwsh
+        run: |
+          rustup default stable-x86_64-pc-windows-msvc
+          rustc -Vv
+          cargo -V
+
+      - name: Reconstruct exact certified v3.21.7 source
+        shell: python
+        run: |
+          import base64,hashlib,shutil,zipfile
+          from pathlib import Path
+          root=Path.cwd();out=root/"cele-rc3-source";tmp=root/".tmp-v32117"
+          if tmp.exists(): shutil.rmtree(tmp)
+          if out.exists(): shutil.rmtree(out)
+          tmp.mkdir();out.mkdir()
+          with zipfile.ZipFile(root/"CELE_v3_21_6_Cloud_Certification_Payload.zip") as z:z.extractall(tmp)
+          (tmp/"foundation_0_3_5").rename(tmp/"foundation_0_3_6")
+          names=["part00.b64","part01.b64","part02.b64","part03.b64","part04.b64","part05a.b64","part05b.b64","part06.b64"]
+          raw=base64.b64decode("".join((root/"v3217_overlay_parts"/n).read_text() for n in names),validate=True)
+          assert len(raw)==38518
+          assert hashlib.sha256(raw).hexdigest()=="fa627fa31932f278efa5a8ad6ec5155be5fb9e40899ddc421380d18f7d07a75a"
+          op=tmp/"overlay.zip";op.write_bytes(raw)
+          with zipfile.ZipFile(op) as z:z.extractall(tmp)
+          (tmp/"OVERLAY_MANIFEST.json").unlink(missing_ok=True);op.unlink(missing_ok=True)
+          for p in tmp.iterdir():
+              d=out/p.name
+              shutil.copytree(p,d,dirs_exist_ok=True) if p.is_dir() else shutil.copy2(p,d)
+          print("Exact certified source reconstruction: PASS")
+
+      - name: Verify clean v3.21.0 baseline before UI patch
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path rc3-evidence | Out-Null
+          python scripts/public-release-audit-v3218.py --root cele-rc3-source --out rc3-evidence/baseline-public-audit.json
+
+      - name: Apply narrow v3.21.17 UI interaction patch
+        shell: pwsh
+        run: |
+          python scripts/patch-ui-interactions-v32117.py --frontend cele-rc3-source/frontend_v3_21_0 --report rc3-evidence/ui-patch-report.json
+
+      - name: Audit v3.21.17 patched frontend
+        shell: pwsh
+        run: |
+          python scripts/audit-ui-hotfix-v32117.py --frontend cele-rc3-source/frontend_v3_21_0 --patch-report rc3-evidence/ui-patch-report.json --out rc3-evidence/source-ui-audit.json
+
+      - name: Real Edge click regression for all sidebar dropdowns
+        shell: pwsh
+        run: |
+          npm install --no-save --package-lock=false playwright-core@1.55.0
+          $server=Start-Process -FilePath python -ArgumentList @('-m','http.server','8765','--bind','127.0.0.1','--directory','cele-rc3-source/frontend_v3_21_0') -PassThru
+          try {
+            Start-Sleep -Seconds 2
+            node scripts/test-ui-interactions-v32117.mjs http://127.0.0.1:8765/CELE_Topnotcher_OS_v3_21_0.html rc3-evidence/real-browser-ui-interaction.json
+            if($LASTEXITCODE -ne 0){throw 'Real-browser UI interaction regression failed.'}
+          } finally {
+            try{Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue}catch{}
+          }
+
+      - name: Apply ace release identity
+        shell: pwsh
+        run: |
+          python scripts/apply-release-identity-v3219.py --foundation cele-rc3-source/foundation_0_3_6 --report rc3-evidence/release-identity-overlay.json
+
+      - name: Build and certify RC3
+        shell: pwsh
+        run: |
+          .\scripts\build-public-rc-v32117.ps1 -FoundationPath .\cele-rc3-source\foundation_0_3_6 -FrontendPath .\cele-rc3-source\frontend_v3_21_0 -OutputDirectory .\rc3-output -SourceAuditPath .\rc3-evidence\source-ui-audit.json -IdentityReportPath .\rc3-evidence\release-identity-overlay.json
+
+      - name: Preserve UI regression evidence in RC output
+        shell: pwsh
+        run: |
+          Copy-Item rc3-evidence\ui-patch-report.json rc3-output\ui-patch-report.json
+          Copy-Item rc3-evidence\real-browser-ui-interaction.json rc3-output\real-browser-ui-interaction.json
+
+      - name: Audit built RC3 installer payload
+        shell: pwsh
+        run: |
+          python scripts/audit-built-windows-rc-v32117.py --extracted rc3-output/installer-extracted --installer rc3-output/binaries/CELE-Topnotcher-OS-v3.21.17-RC3-unsigned-setup.exe --executable rc3-output/binaries/CELE-Topnotcher-OS-v3.21.17-RC3-unsigned.exe --source-audit rc3-output/source-public-package-audit.json --identity-report rc3-output/release-identity-overlay.json --out rc3-output/built-installer-audit.json
+
+      - name: Remove expanded installer payload
+        shell: pwsh
+        run: Remove-Item -Recurse -Force -LiteralPath rc3-output\installer-extracted
+
+      - name: Create RC3 archive
+        shell: pwsh
+        run: |
+          $zip=Join-Path $env:GITHUB_WORKSPACE 'CELE_Topnotcher_OS_v3.21.17_RC3_UNSIGNED_Windows_x64.zip'
+          Compress-Archive -Path rc3-output\* -DestinationPath $zip -CompressionLevel Optimal
+          $hash=(Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          @{file=[IO.Path]::GetFileName($zip);bytes=(Get-Item $zip).Length;sha256=$hash;releaseReady=$false} | ConvertTo-Json | Set-Content rc3-output\RC3_ARCHIVE_SHA256.json
+          Write-Host "RC3 archive SHA-256: $hash"
+
+      - name: Summary
+        if: always()
+        shell: pwsh
+        run: |
+          Add-Content $env:GITHUB_STEP_SUMMARY '# CELE v3.21.17 — UI Interaction Resilience RC3'
+          if(Test-Path 'rc3-output\RC_MANIFEST.json'){
+            $m=Get-Content -Raw 'rc3-output\RC_MANIFEST.json' | ConvertFrom-Json
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **WebView2/Tauri IPC:** $($m.publicStartupWebViewTauriIpc)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **EXE SHA-256:** $($m.executable.sha256)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Installer SHA-256:** $($m.installer.sha256)"
+          }
+          if(Test-Path 'rc3-evidence\real-browser-ui-interaction.json'){
+            $u=Get-Content -Raw 'rc3-evidence\real-browser-ui-interaction.json' | ConvertFrom-Json
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Dropdown interaction regression:** $($u.status)"
+            Add-Content $env:GITHUB_STEP_SUMMARY "- **Sidebar clusters exercised:** $($u.test.clusterCount)"
+          }
+          Add-Content $env:GITHUB_STEP_SUMMARY '- **releaseReady:** false'
+
+      - name: Upload RC3
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CELE-Topnotcher-OS-v3.21.17-RC3-UNSIGNED-Windows-x64
+          path: |
+            rc3-output/**
+            rc3-evidence/**
+            CELE_Topnotcher_OS_v3.21.17_RC3_UNSIGNED_Windows_x64.zip
+          if-no-files-found: error
+          retention-days: 90
