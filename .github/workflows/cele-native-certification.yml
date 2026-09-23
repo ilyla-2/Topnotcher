@@ -1,0 +1,120 @@
+name: CELE v3.21.2 Windows Cloud Certification
+
+on:
+  workflow_dispatch:
+    inputs:
+      windows_runner:
+        description: Windows runner image
+        required: true
+        default: windows-2022
+        type: choice
+        options:
+          - windows-2022
+          - windows-2025
+
+permissions:
+  contents: read
+
+jobs:
+  certify-windows-native:
+    name: Native PDF/OCR + Tauri build
+    runs-on: ${{ inputs.windows_runner }}
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify certification payload exists
+        shell: pwsh
+        run: |
+          $payload = Join-Path $env:GITHUB_WORKSPACE 'CELE_v3_21_2_Cloud_Certification_Payload.zip'
+          if (-not (Test-Path -LiteralPath $payload -PathType Leaf)) {
+            throw 'Missing CELE_v3_21_2_Cloud_Certification_Payload.zip in repository root.'
+          }
+          Get-FileHash -Algorithm SHA256 -LiteralPath $payload
+
+      - name: Expand certification payload
+        shell: pwsh
+        run: |
+          $dest = Join-Path $env:GITHUB_WORKSPACE 'cele-cert'
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Expand-Archive -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'CELE_v3_21_2_Cloud_Certification_Payload.zip') -DestinationPath $dest -Force
+          Get-ChildItem -LiteralPath $dest
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Select stable MSVC Rust toolchain
+        shell: pwsh
+        run: |
+          rustup default stable-x86_64-pc-windows-msvc
+          rustc -Vv
+          cargo -V
+
+      - name: Run CELE cloud Windows certification
+        id: certification
+        continue-on-error: true
+        shell: powershell
+        working-directory: cele-cert/foundation_0_3_2
+        run: |
+          .\scripts\windows-certify-cloud-v3212.ps1
+
+      - name: Publish certification summary
+        if: always()
+        shell: pwsh
+        run: |
+          $summary = Join-Path $env:GITHUB_WORKSPACE 'cele-cert\foundation_0_3_2\release\native-certification\cloud-windows-certification-summary.json'
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '# CELE v3.21.2 Windows Cloud Certification'
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ''
+          if (Test-Path -LiteralPath $summary) {
+            $s = Get-Content -Raw -LiteralPath $summary | ConvertFrom-Json
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- **Cloud status:** $($s.cloudCertificationStatus)"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- **Native runtime:** $($s.nativeRuntimeStatus)"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- **Tauri release build:** $($s.tauriReleaseBuild)"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- **NSIS installer built:** $($s.nsisCertificationInstallerBuilt)"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- **nativeAdapterQA:** $($s.nativeAdapterQA)"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ''
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '> Interactive WebView2/Tauri IPC remains deliberately unapproved by the cloud run.'
+          } else {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '- **Cloud status:** FAIL — summary file was not produced.'
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Certification step outcome: ${{ steps.certification.outcome }}"
+          }
+
+      - name: Upload certification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CELE-v3.21.2-windows-cloud-certification-evidence-${{ inputs.windows_runner }}
+          path: |
+            cele-cert/foundation_0_3_2/release/native-certification/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Enforce cloud result
+        if: always()
+        shell: pwsh
+        run: |
+          $summary = Join-Path $env:GITHUB_WORKSPACE 'cele-cert\foundation_0_3_2\release\native-certification\cloud-windows-certification-summary.json'
+          if (-not (Test-Path -LiteralPath $summary)) {
+            throw 'Certification summary was not produced. Download the evidence/logs and inspect the failed run.'
+          }
+          $s = Get-Content -Raw -LiteralPath $summary | ConvertFrom-Json
+          if ($s.cloudCertificationStatus -eq 'FAIL') {
+            throw 'Cloud certification failed. Download the evidence artifact for diagnosis.'
+          }
+          if ($s.cloudCertificationStatus -eq 'BLOCKED') {
+            Write-Warning 'The hosted Windows image blocked one or more native runtime checks. The build evidence is still uploaded; nativeAdapterQA remains pending.'
+            exit 0
+          }
+          if ($s.cloudCertificationStatus -ne 'PASS') {
+            throw "Unknown cloud certification status: $($s.cloudCertificationStatus)"
+          }
+          Write-Host 'Cloud Windows certification PASS. Final interactive WebView2/Tauri IPC certification remains pending.'
