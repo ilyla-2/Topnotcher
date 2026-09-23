@@ -1,0 +1,127 @@
+name: CELE v3.21.16 One-Click Manual Certification Bundle
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cele-manual-cert-bundle-v32116.yml'
+      - 'manual-certification/run-v32115-desktop-ui-cert.ps1'
+      - 'manual-certification/v3.21.15-manual-desktop-ui-evidence-template.json'
+      - 'manual-certification/RUN-ME-v32115.cmd'
+      - 'docs/V3_21_15_MANUAL_DESKTOP_UI_CERT.md'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  package:
+    name: Package exact RC2 + manual UI certification kit
+    runs-on: windows-2025
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download exact frozen RC2
+        uses: actions/download-artifact@v4
+        with:
+          name: CELE-Topnotcher-OS-v3.21.12-RC2-UNSIGNED-Windows-x64
+          path: frozen-rc2
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ilyla-2/Topnotcher
+          run-id: 35897863593
+
+      - name: Assemble one-click kit
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $expected='6d5b378d3c46850c6f55e1046c9880f6fe8fa6b030bc23fc2d4cacddaa5d7d3b'
+          $installer=Get-ChildItem -LiteralPath .\frozen-rc2 -Recurse -File -Filter 'CELE-Topnotcher-OS-v3.21.12-RC2-unsigned-setup.exe' | Select-Object -First 1
+          if(-not $installer){throw 'Exact RC2 installer not found in artifact.'}
+          $actual=(Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($actual -ne $expected){throw "RC2 installer hash mismatch: $actual"}
+          if((Get-AuthenticodeSignature -LiteralPath $installer.FullName).Status -ne [System.Management.Automation.SignatureStatus]::NotSigned){
+            throw 'RC2 signature state changed.'
+          }
+
+          $kit=Join-Path $env:GITHUB_WORKSPACE 'CELE-v3.21.16-one-click-manual-certification'
+          if(Test-Path $kit){Remove-Item -Recurse -Force $kit}
+          New-Item -ItemType Directory -Force -Path $kit | Out-Null
+
+          Copy-Item -LiteralPath $installer.FullName -Destination (Join-Path $kit $installer.Name)
+          Copy-Item -LiteralPath .\manual-certification\run-v32115-desktop-ui-cert.ps1 -Destination $kit
+          Copy-Item -LiteralPath .\manual-certification\v3.21.15-manual-desktop-ui-evidence-template.json -Destination $kit
+          Copy-Item -LiteralPath .\manual-certification\RUN-ME-v32115.cmd -Destination $kit
+          Copy-Item -LiteralPath .\docs\V3_21_15_MANUAL_DESKTOP_UI_CERT.md -Destination (Join-Path $kit 'README.md')
+
+          $manifest=[ordered]@{
+            schemaVersion=1
+            phase='v3.21.16-one-click-manual-certification-bundle'
+            status='PACKAGED'
+            releaseReady=$false
+            publicReleaseApproved=$false
+            installer=[ordered]@{
+              file=$installer.Name
+              bytes=$installer.Length
+              sha256=$actual
+              authenticode='NotSigned'
+              sourceRunId=35897863593
+              sourceArtifactId=10767244775
+              sourceArtifactDigest='sha256:12c160beb5959ae93144ee3a8ca05abade210d6403724f381a0baeec2cb255ce'
+            }
+            included=@(
+              'RUN-ME-v32115.cmd',
+              'run-v32115-desktop-ui-cert.ps1',
+              'v3.21.15-manual-desktop-ui-evidence-template.json',
+              'README.md'
+            )
+            remainingReleaseGates=@(
+              'human native file-picker execution and evidence review',
+              '100/125/150/200 percent DPI visual execution and evidence review',
+              'Authenticode code signing',
+              'final redistribution review of signed package'
+            )
+          }
+          $manifest | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $kit 'BUNDLE_MANIFEST.json') -Encoding UTF8
+
+          $hashes=@()
+          Get-ChildItem -LiteralPath $kit -File | Sort-Object Name | ForEach-Object {
+            $hashes += [ordered]@{
+              file=$_.Name
+              bytes=$_.Length
+              sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            }
+          }
+          $hashes | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $kit 'SHA256SUMS.json') -Encoding UTF8
+
+          $zip=Join-Path $env:GITHUB_WORKSPACE 'CELE_v3.21.16_One_Click_Manual_Certification_Windows.zip'
+          if(Test-Path $zip){Remove-Item -Force $zip}
+          Compress-Archive -Path (Join-Path $kit '*') -DestinationPath $zip -CompressionLevel Optimal
+          $zipSha=(Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          $zipBytes=(Get-Item $zip).Length
+          @{file=[IO.Path]::GetFileName($zip);bytes=$zipBytes;sha256=$zipSha;releaseReady=$false} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $kit 'BUNDLE_ZIP_SHA256.json') -Encoding UTF8
+          Write-Host "BUNDLE ZIP: $zip"
+          Write-Host "BUNDLE SHA-256: $zipSha"
+
+      - name: Upload one-click manual certification bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: CELE-v3.21.16-One-Click-Manual-Certification-Windows
+          path: |
+            CELE-v3.21.16-one-click-manual-certification/**
+            CELE_v3.21.16_One_Click_Manual_Certification_Windows.zip
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Summary
+        shell: pwsh
+        run: |
+          Add-Content $env:GITHUB_STEP_SUMMARY '# CELE v3.21.16 — One-Click Manual Certification Bundle'
+          Add-Content $env:GITHUB_STEP_SUMMARY ''
+          Add-Content $env:GITHUB_STEP_SUMMARY '- Exact frozen RC2 installer: verified'
+          Add-Content $env:GITHUB_STEP_SUMMARY '- Installer SHA-256: 6d5b378d3c46850c6f55e1046c9880f6fe8fa6b030bc23fc2d4cacddaa5d7d3b'
+          Add-Content $env:GITHUB_STEP_SUMMARY '- Includes RUN-ME-v32115.cmd'
+          Add-Content $env:GITHUB_STEP_SUMMARY '- releaseReady: false'
