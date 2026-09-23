@@ -1,0 +1,176 @@
+name: CELE v3.21.10 First Public RC Builder
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cele-public-rc-v32110.yml'
+      - 'scripts/build-public-rc-v32110.ps1'
+      - 'scripts/audit-built-windows-rc-v32110.py'
+      - 'scripts/apply-release-identity-v3219.py'
+      - 'scripts/public-release-audit-v3218.py'
+      - 'release-gates/v3.21.9-release-identity.json'
+      - 'v3217_overlay_parts/**'
+      - 'CELE_v3_21_6_Cloud_Certification_Payload.zip'
+
+permissions:
+  contents: read
+
+jobs:
+  windows-unsigned-rc:
+    name: Build and audit unsigned Windows RC1
+    runs-on: windows-2025
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Select stable MSVC Rust toolchain
+        shell: pwsh
+        run: |
+          rustup default stable-x86_64-pc-windows-msvc
+          rustc -Vv
+          cargo -V
+
+      - name: Reconstruct exact certified v3.21.7 source
+        shell: python
+        run: |
+          import base64, hashlib, shutil, zipfile
+          from pathlib import Path
+
+          root = Path.cwd()
+          base = root / "CELE_v3_21_6_Cloud_Certification_Payload.zip"
+          parts = root / "v3217_overlay_parts"
+          out = root / "cele-rc-source"
+          tmp = root / ".tmp-v32110-rebuild"
+
+          if tmp.exists(): shutil.rmtree(tmp)
+          if out.exists(): shutil.rmtree(out)
+          tmp.mkdir()
+          out.mkdir()
+
+          with zipfile.ZipFile(base) as z:
+              z.extractall(tmp)
+
+          old = tmp / "foundation_0_3_5"
+          new = tmp / "foundation_0_3_6"
+          if not old.is_dir():
+              raise SystemExit("Certified base is missing foundation_0_3_5")
+          old.rename(new)
+
+          names = ["part00.b64","part01.b64","part02.b64","part03.b64","part04.b64","part05a.b64","part05b.b64","part06.b64"]
+          encoded = "".join((parts / n).read_text(encoding="utf-8") for n in names)
+          overlay = base64.b64decode(encoded, validate=True)
+          if len(overlay) != 38518:
+              raise SystemExit(f"v3.21.7 overlay size mismatch: {len(overlay)}")
+          if hashlib.sha256(overlay).hexdigest() != "fa627fa31932f278efa5a8ad6ec5155be5fb9e40899ddc421380d18f7d07a75a":
+              raise SystemExit("v3.21.7 overlay SHA-256 mismatch")
+
+          op = tmp / "v3217-overlay.zip"
+          op.write_bytes(overlay)
+          with zipfile.ZipFile(op) as z:
+              z.extractall(tmp)
+          (tmp / "OVERLAY_MANIFEST.json").unlink(missing_ok=True)
+          op.unlink(missing_ok=True)
+
+          for p in tmp.iterdir():
+              target = out / p.name
+              if p.is_dir():
+                  shutil.copytree(p, target, dirs_exist_ok=True)
+              else:
+                  shutil.copy2(p, target)
+
+          required = [
+              out / "frontend_v3_21_0" / "CELE_Topnotcher_OS_v3_21_0.html",
+              out / "foundation_0_3_6" / "src-tauri" / "tauri.conf.json",
+              out / "foundation_0_3_6" / "package-lock.json",
+          ]
+          for p in required:
+              if not p.is_file():
+                  raise SystemExit(f"Reconstruction missing {p}")
+          print("Exact certified source reconstruction: PASS")
+
+      - name: Audit frozen source before release overlay
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path rc-evidence | Out-Null
+          python scripts/public-release-audit-v3218.py --root cele-rc-source --out rc-evidence/source-public-package-audit.json
+
+      - name: Apply approved ace release identity overlay
+        shell: pwsh
+        run: |
+          python scripts/apply-release-identity-v3219.py --foundation cele-rc-source/foundation_0_3_6 --report rc-evidence/release-identity-overlay.json
+
+      - name: Build unsigned Windows release candidate
+        shell: pwsh
+        run: |
+          .\scripts\build-public-rc-v32110.ps1 -FoundationPath .\cele-rc-source\foundation_0_3_6 -FrontendPath .\cele-rc-source\frontend_v3_21_0 -OutputDirectory .\rc-output -SourceAuditPath .\rc-evidence\source-public-package-audit.json -IdentityReportPath .\rc-evidence\release-identity-overlay.json
+
+      - name: Audit built NSIS payload
+        shell: pwsh
+        run: |
+          python scripts/audit-built-windows-rc-v32110.py --extracted rc-output/installer-extracted --installer rc-output/binaries/CELE-Topnotcher-OS-v3.21.10-RC1-unsigned-setup.exe --executable rc-output/binaries/CELE-Topnotcher-OS-v3.21.10-RC1-unsigned.exe --source-audit rc-output/source-public-package-audit.json --identity-report rc-output/release-identity-overlay.json --out rc-output/built-installer-audit.json
+
+      - name: Remove expanded installer payload from distributable artifact
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force -LiteralPath rc-output\installer-extracted
+
+      - name: Create RC evidence bundle
+        shell: pwsh
+        run: |
+          $zip = Join-Path $env:GITHUB_WORKSPACE 'CELE_Topnotcher_OS_v3.21.10_RC1_UNSIGNED_Windows_x64.zip'
+          if (Test-Path $zip) { Remove-Item -Force $zip }
+          Compress-Archive -Path rc-output\* -DestinationPath $zip -CompressionLevel Optimal
+          $hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          $size = (Get-Item -LiteralPath $zip).Length
+          @{ file = [System.IO.Path]::GetFileName($zip); bytes = $size; sha256 = $hash; publicReleaseApproved = $false; releaseReady = $false } | ConvertTo-Json | Set-Content -LiteralPath rc-output\RC_ARCHIVE_SHA256.json -Encoding UTF8
+          Write-Host "RC archive SHA-256: $hash"
+
+      - name: Publish RC summary
+        if: always()
+        shell: pwsh
+        run: |
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '# CELE v3.21.10 — First Public Release Candidate'
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ''
+          $audit = 'rc-output\built-installer-audit.json'
+          $manifest = 'rc-output\RC_MANIFEST.json'
+          if ((Test-Path $audit) -and (Test-Path $manifest)) {
+            $a = Get-Content -Raw $audit | ConvertFrom-Json
+            $m = Get-Content -Raw $manifest | ConvertFrom-Json
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- **Built installer audit:** $($a.status)"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- **Publisher brand:** $($m.publisherBrand)"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- **Bundle identifier:** $($m.identifier)"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- **Executable SHA-256:** $($m.executable.sha256)"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- **Installer SHA-256:** $($m.installer.sha256)"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- **Authenticode:** unsigned by design"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- **releaseReady:** false"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ''
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '> RC1 is for controlled manual certification only. It is not approved for public distribution.'
+          } else {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '- RC build did not reach final audited artifact stage.'
+          }
+
+      - name: Upload unsigned RC1
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CELE-Topnotcher-OS-v3.21.10-RC1-UNSIGNED-Windows-x64
+          path: |
+            rc-output/**
+            CELE_Topnotcher_OS_v3.21.10_RC1_UNSIGNED_Windows_x64.zip
+          if-no-files-found: error
+          retention-days: 90

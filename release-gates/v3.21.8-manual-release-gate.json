@@ -49,6 +49,20 @@
       "status": "APPROVED",
       "phase": "v3.21.9",
       "evidenceRef": "release-gates/v3.21.9-release-identity.json"
+    },
+    "publicReleaseCandidate": {
+      "status": "BUILDER_CONFIGURED",
+      "phase": "v3.21.10",
+      "candidate": "RC1",
+      "platform": "windows-x64",
+      "signing": "UNSIGNED",
+      "workflow": ".github/workflows/cele-public-rc-v32110.yml",
+      "latestSuccessfulRunId": null,
+      "artifactId": null,
+      "artifactDigest": null,
+      "executableSha256": null,
+      "installerSha256": null,
+      "note": "Generated candidate is for controlled manual certification only and is not public-release approved."
     }
   },
   "manualGates": {
