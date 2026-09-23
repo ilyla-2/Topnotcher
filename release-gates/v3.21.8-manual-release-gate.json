@@ -214,15 +214,41 @@
       "versionToVersionUpgrade": "PENDING_SEPARATE_CERTIFICATION"
     },
     "versionUpgradeAutomation": {
-      "status": "CONFIGURED",
+      "status": "PASS",
       "phase": "v3.21.14",
       "fromVersion": "0.3.6",
-      "toVersion": "0.3.7",
+      "toCertificationVersion": "0.3.7",
       "sourceRc2RunId": 35897863593,
       "sourceRc2ArtifactId": 10767244775,
-      "latestSuccessfulRunId": null,
-      "evidenceArtifactId": null,
-      "note": "Automates a real version-to-version installer transition with pre/post 13-check installed WebView2/Tauri IPC. User-data persistence remains unasserted."
+      "successfulRunId": 35899772106,
+      "successfulCommitSha": "fff1ce601fd0d47a6bb3796373c3fdfc422d846b",
+      "runner": "windows-2025",
+      "frozenBranch": "certified/v3.21.14-version-upgrade",
+      "evidenceArtifactId": 10768882584,
+      "evidenceArtifactDigest": "sha256:24be9540e8d5b130297809e2947f29a6fd96ae294803d276aa1131e1bd9178f8",
+      "evidenceExpiresAtUtc": "2026-12-22T18:02:51Z",
+      "upgradeInstaller": {
+        "file": "CELE Topnotcher OS_0.3.7_x64-setup.exe",
+        "sha256": "dc6a7ec87225a9bda05ee3783aee5b4c87621442d87b47e14ac4090a48cdd32d",
+        "embeddedExecutableSha256": "01fc95ed57f0ca6a1b8ba3a28422a6b02012714d84f17c25860e5f2c5f6cc1f9",
+        "publicRelease": false,
+        "purpose": "certification-only"
+      },
+      "checks": {
+        "versionToVersionUpgrade": "PASS",
+        "displayVersionAfter": "0.3.7",
+        "nativeDataPreservationAcrossInstallerUpgrade": "PASS",
+        "nativeDataRoot": "C:\\Users\\runneradmin\\AppData\\Roaming\\com.ace.celetopnotcher\\Topnotcher Data",
+        "nativeDataFilesBefore": 6,
+        "nativeDataExactTreeUnchangedBeforeUpgradedLaunch": true,
+        "preUpgradeWebViewTauriIpc": "PASS_13_OF_13",
+        "postUpgradeWebViewTauriIpc": "PASS_13_OF_13",
+        "upgradedUninstall": "PASS",
+        "uninstallRegistryResidual": "NONE",
+        "executableResidual": "NONE",
+        "installDirectoryResiduals": 0
+      },
+      "note": "Certification-only 0.3.7 verified the exact RC2 0.3.6 -> 0.3.7 installer transition, native-data preservation before upgraded launch, post-upgrade IPC, and clean uninstall. It is not a public release."
     }
   },
   "manualGates": {
@@ -239,12 +265,16 @@
       "evidenceRefs": []
     },
     "installedAppLifecycle": {
-      "status": "AUTOMATED_CORE_PASS_VERSION_UPGRADE_RUNNING_MANUAL_UI_PENDING",
+      "status": "AUTOMATED_LIFECYCLE_AND_VERSION_UPGRADE_PASS_MANUAL_UI_PENDING",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": [
         "GitHub Actions run 35899158734",
-        "Artifact 10768276647"
+        "Artifact 10768276647",
+        "release-gates/v3.21.13-installed-rc2-lifecycle.json",
+        "GitHub Actions run 35899772106",
+        "Artifact 10768882584",
+        "release-gates/v3.21.14-version-upgrade.json"
       ]
     },
     "codeSigning": {

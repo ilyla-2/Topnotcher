@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "phase": "v3.21.14-version-to-version-upgrade-certification",
+  "status": "PASS",
+  "releaseReady": false,
+  "nativeAdapterQA": "pending-manual-desktop-gates",
+  "frozenBranch": "certified/v3.21.14-version-upgrade",
+  "certificationRun": {
+    "id": 35899772106,
+    "commitSha": "fff1ce601fd0d47a6bb3796373c3fdfc422d846b",
+    "runner": "windows-2025"
+  },
+  "baseline": {
+    "version": "0.3.6",
+    "rc2RunId": 35897863593,
+    "rc2ArtifactId": 10767244775,
+    "rc2InstallerSha256": "6d5b378d3c46850c6f55e1046c9880f6fe8fa6b030bc23fc2d4cacddaa5d7d3b"
+  },
+  "upgrade": {
+    "certificationVersion": "0.3.7",
+    "identifier": "com.ace.celetopnotcher",
+    "startupUrl": "payload/CELE_Topnotcher_OS_v3_21_0.html",
+    "installerFile": "CELE Topnotcher OS_0.3.7_x64-setup.exe",
+    "installerSha256": "dc6a7ec87225a9bda05ee3783aee5b4c87621442d87b47e14ac4090a48cdd32d",
+    "embeddedExecutableSha256": "01fc95ed57f0ca6a1b8ba3a28422a6b02012714d84f17c25860e5f2c5f6cc1f9",
+    "installedExecutableSha256": "01fc95ed57f0ca6a1b8ba3a28422a6b02012714d84f17c25860e5f2c5f6cc1f9",
+    "displayVersionAfter": "0.3.7"
+  },
+  "nativeDataPreservation": {
+    "root": "C:\\Users\\runneradmin\\AppData\\Roaming\\com.ace.celetopnotcher\\Topnotcher Data",
+    "filesBefore": 6,
+    "exactTreeUnchangedBeforeUpgradedLaunch": true
+  },
+  "preUpgradeLaunch": {
+    "status": "PASS",
+    "checkCount": 13,
+    "reportSha256": "876d3ace319e94dd37a70db71d537167ec9a131478960c819d1eb7c56935c3e0"
+  },
+  "postUpgradeLaunch": {
+    "status": "PASS",
+    "checkCount": 13,
+    "reportSha256": "0e95db7b981f4be76384fc12afa8b119127639be30bbe31cd17c161c84efa5c5"
+  },
+  "uninstall": {
+    "registryEntryRemaining": false,
+    "executableRemaining": false,
+    "installDirectoryResidualCount": 0
+  },
+  "evidenceArtifact": {
+    "id": 10768882584,
+    "name": "CELE-v3.21.14-version-upgrade-evidence",
+    "digest": "sha256:24be9540e8d5b130297809e2947f29a6fd96ae294803d276aa1131e1bd9178f8",
+    "expiresAtUtc": "2026-12-22T18:02:51Z"
+  },
+  "remainingGates": [
+    "human native file-picker interaction",
+    "100%-200% display/DPI visual inspection",
+    "Authenticode signing",
+    "final redistribution review"
+  ]
+}
