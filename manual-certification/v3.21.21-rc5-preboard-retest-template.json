@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "phase": "v3.21.21-rc5-real-preboard-retest",
+  "requiredRc5InstallerSha256": "9e6ffb1a8a04fea43087a7eb13dab55721d5cfbbf3d5ed816bb71a190fea85da",
+  "requiredRegression": "Use the same preboard PDF that made RC4 become Not Responding.",
+  "automatedProcessMonitor": {
+    "durationSeconds": 90,
+    "hangThresholdConsecutiveSamples": 5,
+    "required": "process must not exit and must not remain Not Responding for 5 consecutive one-second samples"
+  },
+  "nativeFilePicker": {
+    "requiredChecks": [
+      "same failing preboard PDF used",
+      "preboard PDF imports and document/page information appears",
+      "at least two pages render",
+      "native OCR returns a result",
+      "picker Cancel path remains stable",
+      "generated invalid PDF is rejected cleanly"
+    ]
+  },
+  "privacy": "The source preboard PDF is not copied into the evidence output.",
+  "displayAndDpi": "NOT_INCLUDED_IN_THIS_FOCUSED_RETEST",
+  "approval": "PENDING_HUMAN_EXECUTION_AND_REVIEW",
+  "releaseReady": false
+}
