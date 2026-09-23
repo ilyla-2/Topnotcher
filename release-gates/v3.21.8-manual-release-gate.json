@@ -280,7 +280,7 @@
       "note": "Self-contained controlled-test bundle containing exact frozen RC2 plus v3.21.15 human file-picker/DPI kit and RUN-ME launcher. Manual gates remain pending until evidence is executed and reviewed."
     },
     "uiInteractionRepair": {
-      "status": "RC3_BUILD_RUNNING",
+      "status": "RC3_AUTOMATED_PASS_SUPERSEDED_BY_ROOT_FIX",
       "phase": "v3.21.17",
       "finding": "Manual RC2 test found multiple sidebar dropdown groups unresponsive.",
       "affectedSharedSurface": [
@@ -293,19 +293,31 @@
       "compilerChanged": false,
       "questionDataChanged": false,
       "latestSuccessfulRunId": null,
+      "artifactId": 10771645298,
+      "artifactDigest": "sha256:ce4789384c151010adf1da1b1bea5cf33248096a01d7b61d8f66b0845fc5a718",
+      "successfulRunId": 35905527622
+    },
+    "ocrStartupRootFix": {
+      "status": "RC4_BUILD_RUNNING",
+      "phase": "v3.21.18",
+      "rootCause": "nativeOcrCurrentScanPage and nativeOcrAllScanPages were referenced by wire() but absent after CSP extraction, aborting the startup chain before compact-navigation wiring.",
+      "repair": "Pre-main-script compatibility module restores the two missing UI wrappers using the existing ocrPageV15 engine.",
+      "compilerChanged": false,
+      "questionDataChanged": false,
+      "latestSuccessfulRunId": null,
       "artifactId": null,
       "artifactDigest": null
     }
   },
   "manualGates": {
     "nativeFilePicker": {
-      "status": "BLOCKED_BY_UI_INTERACTION_REPAIR",
+      "status": "BLOCKED_PENDING_RC4_ROOT_FIX",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": []
     },
     "displayAndDpi": {
-      "status": "BLOCKED_BY_UI_INTERACTION_REPAIR",
+      "status": "BLOCKED_PENDING_RC4_ROOT_FIX",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": []

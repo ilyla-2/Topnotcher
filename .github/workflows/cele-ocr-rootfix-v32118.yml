@@ -1,0 +1,119 @@
+name: CELE v3.21.18 OCR Startup Root Fix RC4
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cele-ocr-rootfix-v32118.yml'
+      - 'scripts/patch-ocr-ui-wire-v32118.py'
+      - 'scripts/audit-ocr-rootfix-v32118.py'
+      - 'scripts/test-ocr-rootfix-v32118.mjs'
+      - 'scripts/build-public-rc-v32118.ps1'
+      - 'scripts/audit-built-windows-rc-v32118.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rc4:
+    runs-on: windows-2025
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Stable MSVC Rust
+        shell: pwsh
+        run: |
+          rustup default stable-x86_64-pc-windows-msvc
+          rustc -Vv
+          cargo -V
+      - name: Reconstruct exact certified source
+        shell: python
+        run: |
+          import base64,hashlib,shutil,zipfile
+          from pathlib import Path
+          root=Path.cwd();tmp=root/".tmp18";out=root/"rc4-source"
+          if tmp.exists():shutil.rmtree(tmp)
+          if out.exists():shutil.rmtree(out)
+          tmp.mkdir();out.mkdir()
+          with zipfile.ZipFile(root/"CELE_v3_21_6_Cloud_Certification_Payload.zip") as z:z.extractall(tmp)
+          (tmp/"foundation_0_3_5").rename(tmp/"foundation_0_3_6")
+          ns=["part00.b64","part01.b64","part02.b64","part03.b64","part04.b64","part05a.b64","part05b.b64","part06.b64"]
+          raw=base64.b64decode("".join((root/"v3217_overlay_parts"/n).read_text() for n in ns),validate=True)
+          assert hashlib.sha256(raw).hexdigest()=="fa627fa31932f278efa5a8ad6ec5155be5fb9e40899ddc421380d18f7d07a75a"
+          op=tmp/"o.zip";op.write_bytes(raw)
+          with zipfile.ZipFile(op) as z:z.extractall(tmp)
+          (tmp/"OVERLAY_MANIFEST.json").unlink(missing_ok=True);op.unlink(missing_ok=True)
+          for p in tmp.iterdir():
+            d=out/p.name
+            shutil.copytree(p,d,dirs_exist_ok=True) if p.is_dir() else shutil.copy2(p,d)
+      - name: Audit baseline
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force evidence | Out-Null
+          python scripts/public-release-audit-v3218.py --root rc4-source --out evidence/baseline-audit.json
+      - name: Apply v3.21.17 interaction resilience
+        shell: pwsh
+        run: python scripts/patch-ui-interactions-v32117.py --frontend rc4-source/frontend_v3_21_0 --report evidence/v32117-patch.json
+      - name: Apply v3.21.18 OCR startup root fix
+        shell: pwsh
+        run: python scripts/patch-ocr-ui-wire-v32118.py --frontend rc4-source/frontend_v3_21_0 --report evidence/v32118-patch.json
+      - name: Audit RC4 frontend
+        shell: pwsh
+        run: python scripts/audit-ocr-rootfix-v32118.py --frontend rc4-source/frontend_v3_21_0 --patch-report evidence/v32118-patch.json --out evidence/source-audit.json
+      - name: Real Edge startup and interaction regression
+        shell: pwsh
+        run: |
+          npm install --no-save --package-lock=false playwright-core@1.55.0
+          $s=Start-Process python -ArgumentList @('-m','http.server','8765','--bind','127.0.0.1','--directory','rc4-source/frontend_v3_21_0') -PassThru
+          try {
+            Start-Sleep 2
+            node scripts/test-ocr-rootfix-v32118.mjs http://127.0.0.1:8765/CELE_Topnotcher_OS_v3_21_0.html evidence/real-browser-rootfix.json
+            if($LASTEXITCODE -ne 0){throw 'Root-fix browser regression failed'}
+          } finally {try{Stop-Process -Id $s.Id -Force -ErrorAction SilentlyContinue}catch{}}
+      - name: Apply ace identity
+        shell: pwsh
+        run: python scripts/apply-release-identity-v3219.py --foundation rc4-source/foundation_0_3_6 --report evidence/identity.json
+      - name: Build and certify RC4
+        shell: pwsh
+        run: .\scripts\build-public-rc-v32118.ps1 -FoundationPath .\rc4-source\foundation_0_3_6 -FrontendPath .\rc4-source\frontend_v3_21_0 -OutputDirectory .\rc4-output -SourceAuditPath .\evidence\source-audit.json -IdentityReportPath .\evidence\identity.json
+      - name: Copy root-fix evidence
+        shell: pwsh
+        run: |
+          Copy-Item evidence\v32117-patch.json rc4-output\
+          Copy-Item evidence\v32118-patch.json rc4-output\
+          Copy-Item evidence\real-browser-rootfix.json rc4-output\
+      - name: Audit built RC4
+        shell: pwsh
+        run: python scripts/audit-built-windows-rc-v32118.py --extracted rc4-output/installer-extracted --installer rc4-output/binaries/CELE-Topnotcher-OS-v3.21.18-RC4-unsigned-setup.exe --executable rc4-output/binaries/CELE-Topnotcher-OS-v3.21.18-RC4-unsigned.exe --source-audit rc4-output/source-public-package-audit.json --identity-report rc4-output/release-identity-overlay.json --out rc4-output/built-installer-audit.json
+      - name: Remove extraction
+        shell: pwsh
+        run: Remove-Item -Recurse -Force rc4-output\installer-extracted
+      - name: Archive
+        shell: pwsh
+        run: |
+          $z=Join-Path $env:GITHUB_WORKSPACE 'CELE_Topnotcher_OS_v3.21.18_RC4_UNSIGNED_Windows_x64.zip'
+          Compress-Archive -Path rc4-output\* -DestinationPath $z -CompressionLevel Optimal
+          $h=(Get-FileHash $z -Algorithm SHA256).Hash.ToLowerInvariant()
+          @{file=[IO.Path]::GetFileName($z);bytes=(Get-Item $z).Length;sha256=$h;releaseReady=$false}|ConvertTo-Json|Set-Content rc4-output\RC4_ARCHIVE_SHA256.json
+          Write-Host "RC4 archive SHA-256: $h"
+      - name: Summary
+        if: always()
+        shell: pwsh
+        run: |
+          Add-Content $env:GITHUB_STEP_SUMMARY '# CELE v3.21.18 OCR Startup Root Fix RC4'
+          if(Test-Path evidence\real-browser-rootfix.json){$r=Get-Content -Raw evidence\real-browser-rootfix.json|ConvertFrom-Json;Add-Content $env:GITHUB_STEP_SUMMARY "- Browser startup/root fix: $($r.status)";Add-Content $env:GITHUB_STEP_SUMMARY "- Page errors: $(@($r.pageErrors).Count)"}
+          if(Test-Path rc4-output\RC_MANIFEST.json){$m=Get-Content -Raw rc4-output\RC_MANIFEST.json|ConvertFrom-Json;Add-Content $env:GITHUB_STEP_SUMMARY "- WebView2/Tauri IPC: $($m.publicStartupWebViewTauriIpc)";Add-Content $env:GITHUB_STEP_SUMMARY "- EXE: $($m.executable.sha256)";Add-Content $env:GITHUB_STEP_SUMMARY "- Installer: $($m.installer.sha256)"}
+          Add-Content $env:GITHUB_STEP_SUMMARY '- releaseReady: false'
+      - name: Upload RC4
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CELE-Topnotcher-OS-v3.21.18-RC4-UNSIGNED-Windows-x64
+          path: |
+            rc4-output/**
+            evidence/**
+            CELE_Topnotcher_OS_v3.21.18_RC4_UNSIGNED_Windows_x64.zip
+          if-no-files-found: error
+          retention-days: 90
