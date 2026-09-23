@@ -298,15 +298,26 @@
       "successfulRunId": 35905527622
     },
     "ocrStartupRootFix": {
-      "status": "RC4_BUILD_RUNNING",
+      "status": "RC4_RETRY_AFTER_COMPLETE_WIRE_DEPENDENCY_AUDIT",
       "phase": "v3.21.18",
-      "rootCause": "nativeOcrCurrentScanPage and nativeOcrAllScanPages were referenced by wire() but absent after CSP extraction, aborting the startup chain before compact-navigation wiring.",
-      "repair": "Pre-main-script compatibility module restores the two missing UI wrappers using the existing ocrPageV15 engine.",
+      "rootCause": "CSP extraction omitted three UI startup helpers referenced by wire(): nativeOcrCurrentScanPage, nativeOcrAllScanPages, and clampScanRangeV12. Because wire() evaluates handler assignments eagerly, the first missing symbol aborts the startup chain before compact-navigation wiring.",
+      "repair": "Pre-main compatibility module restores all three missing UI helpers. Full wire dependency audit found no other real missing definitions; RC3 interaction resilience remains layered as fallback.",
       "compilerChanged": false,
       "questionDataChanged": false,
       "latestSuccessfulRunId": null,
       "artifactId": null,
-      "artifactDigest": null
+      "artifactDigest": null,
+      "latestFailedRunId": 35907502843,
+      "failedRunClassification": "SECOND_MISSING_CSP_EXTRACTED_STARTUP_HELPER",
+      "wireDependencyAuditRunId": 35908035244,
+      "missingRealSymbols": [
+        "clampScanRangeV12"
+      ],
+      "parserFalsePositives": [
+        "$",
+        "$$",
+        "async"
+      ]
     }
   },
   "manualGates": {

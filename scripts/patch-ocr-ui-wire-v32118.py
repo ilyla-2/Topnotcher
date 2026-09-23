@@ -11,8 +11,21 @@ TARGET_SRC="assets/js/02-inline-script-02.js"
 TAG='<script id="ocrUiWireCompatV32118" src="'+JS_REL+'"></script>'
 
 JS=r"""'use strict';
-/* v3.21.18: restore two OCR UI wrappers lost during CSP extraction.
+/* v3.21.18: restore the OCR UI helpers lost during CSP extraction.
    The underlying renderer/OCR/parser functions remain the existing reviewed implementation. */
+function clampScanRangeV12(){
+  const startEl=document.getElementById('scanStartPage');
+  const endEl=document.getElementById('scanEndPage');
+  const pageCount=Math.max(1,Number(typeof intake!=='undefined'&&intake?intake.scanPageCount:0)||1);
+  let start=Math.trunc(Number(startEl?.value)||1);
+  let end=Math.trunc(Number(endEl?.value)||pageCount);
+  start=Math.max(1,Math.min(pageCount,start));
+  end=Math.max(start,Math.min(pageCount,end));
+  if(startEl)startEl.value=String(start);
+  if(endEl)endEl.value=String(end);
+  return [start,end];
+}
+
 async function nativeOcrCurrentScanPage(){
   const status=document.getElementById('scanOcrStatus');
   try{
@@ -62,6 +75,7 @@ async function nativeOcrAllScanPages(){
 
 window.CELE_OCR_UI_WIRE_V32118={
   version:'v3.21.18',
+  range:()=>clampScanRangeV12(),
   current:()=>nativeOcrCurrentScanPage(),
   all:()=>nativeOcrAllScanPages()
 };
@@ -105,7 +119,7 @@ def main():
     text=pat.sub(TAG+r'\n\1',text,count=1)
     html.write_text(text,encoding="utf-8")
 
-    reason="v3.21.18 restores missing OCR UI wrappers; underlying OCR engine, compiler, CELE data and analytics unchanged."
+    reason="v3.21.18 restores missing OCR UI startup helpers; underlying OCR engine, compiler, CELE data and analytics unchanged."
     manifest["frontendVersion"]="v3.21.18-ocr-startup-rootfix"
     update(manifest["files"],HTML_REL,sha(html),reason)
     update(manifest["files"],JS_REL,sha(js),reason)
@@ -128,7 +142,7 @@ def main():
       "runtimeFiles":len(manifest["files"]),"publicFiles":len(public["files"]),
       "changedRuntimeFiles":changed,"addedRuntimeFiles":added,
       "compilerSha256":sha(compiler),"htmlSha256":sha(html),"ocrUiWireSha256":sha(js),
-      "restoredSymbols":["nativeOcrCurrentScanPage","nativeOcrAllScanPages"],
+      "restoredSymbols":["clampScanRangeV12","nativeOcrCurrentScanPage","nativeOcrAllScanPages"],
       "scope":{
         "questionDataChanged":False,"coverageMathChanged":False,"readinessChanged":False,
         "studyNextChanged":False,"learnerAnalyticsChanged":False,
