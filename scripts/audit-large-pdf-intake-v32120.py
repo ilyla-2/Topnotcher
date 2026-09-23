@@ -5,7 +5,7 @@ COMPILER_SHA="3133e9ea5259afd12dfc8f2ba7b7cc3cdc8b4e2b089ad86bad40936e504d0ef5"
 def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument("--frontend",required=True); ap.add_argument("--patch-report",required=True); ap.add_argument("--out",required=True); a=ap.parse_args()
-    root=Path(a.frontend); m=json.loads((root/"ASTRA_PAYLOAD_MANIFEST_v3_21_0.pending.json").read_text()); pub=json.loads((root/"PUBLIC_INCLUSION_MANIFEST_v3_21_0.json").read_text()); pr=json.loads(Path(a.patch_report).read_text())
+    root=Path(a.frontend); m=json.loads((root/"ASTRA_PAYLOAD_MANIFEST_v3_21_0.pending.json").read_text(encoding="utf-8")); pub=json.loads((root/"PUBLIC_INCLUSION_MANIFEST_v3_21_0.json").read_text()); pr=json.loads(Path(a.patch_report).read_text())
     failures=[]
     if pr.get("status")!="PASS": failures.append("patch report not PASS")
     if m.get("frontendVersion")!="v3.21.20-large-pdf-intake-resilience": failures.append("wrong frontendVersion")
