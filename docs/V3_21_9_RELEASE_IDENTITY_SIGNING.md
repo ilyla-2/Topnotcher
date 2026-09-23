@@ -20,7 +20,7 @@ The first public release will use:
 
 `com.ace.celetopnotcher`
 
-The certified v3.21.7 branch remains untouched. The final release build will apply the identity as a controlled release overlay after verifying the exact certified baseline.
+The certified v3.21.7 branch remains untouched. The final release build applies the identity through a separate Tauri release override config after verifying the exact certified baseline. The certified base tauri.conf.json remains unchanged.
 
 ## Migration consequence
 
@@ -60,7 +60,8 @@ Use:
 against a reconstructed certified source tree. The script:
 
 - verifies the old development identifier before changing it;
-- changes only the Tauri bundle identifier and release publisher metadata;
+- creates src-tauri/tauri.release-ace.conf.json with the public bundle identifier and updates release publisher metadata;
+- does not modify the certified base src-tauri/tauri.conf.json;
 - does not touch the frozen frontend;
 - does not touch the frozen compiler;
 - keeps `signed=false` and `publicReleaseApproved=false`;

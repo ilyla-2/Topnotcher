@@ -30,12 +30,20 @@ $SourceAuditPath = (Resolve-Path -LiteralPath $SourceAuditPath).Path
 $IdentityReportPath = (Resolve-Path -LiteralPath $IdentityReportPath).Path
 
 $configPath = Join-Path $FoundationPath "src-tauri\tauri.conf.json"
+$releaseConfigPath = Join-Path $FoundationPath "src-tauri\tauri.release-ace.conf.json"
 $metadataPath = Join-Path $FoundationPath "release\metadata.json"
 $config = Get-Content -Raw -LiteralPath $configPath | ConvertFrom-Json
+if (-not (Test-Path -LiteralPath $releaseConfigPath -PathType Leaf)) {
+  throw "RC builder requires the v3.21.9 release overlay config."
+}
+$releaseConfig = Get-Content -Raw -LiteralPath $releaseConfigPath | ConvertFrom-Json
 $metadata = Get-Content -Raw -LiteralPath $metadataPath | ConvertFrom-Json
 
-if ($config.identifier -ne "com.ace.celetopnotcher") {
-  throw "RC builder requires release identifier com.ace.celetopnotcher; found $($config.identifier)"
+if ($config.identifier -ne "local.cele.topnotcher.foundation") {
+  throw "Certified base identifier changed unexpectedly: $($config.identifier)"
+}
+if ($releaseConfig.identifier -ne "com.ace.celetopnotcher") {
+  throw "RC builder requires release overlay identifier com.ace.celetopnotcher; found $($releaseConfig.identifier)"
 }
 if ($metadata.publisher -ne "ace") {
   throw "RC builder requires publisher brand ace; found $($metadata.publisher)"
@@ -48,6 +56,12 @@ if ($config.bundle.windows.certificateThumbprint) {
 }
 if ($config.bundle.windows.signCommand) {
   throw "RC builder expected no configured Windows signCommand."
+}
+if ($releaseConfig.bundle -and $releaseConfig.bundle.windows -and $releaseConfig.bundle.windows.certificateThumbprint) {
+  throw "Release overlay unexpectedly configures a certificate thumbprint."
+}
+if ($releaseConfig.bundle -and $releaseConfig.bundle.windows -and $releaseConfig.bundle.windows.signCommand) {
+  throw "Release overlay unexpectedly configures a signCommand."
 }
 
 Section "Install exact Node/Tauri dependencies"
@@ -87,7 +101,7 @@ Write-Host "Frozen frontend staging verified: $($manifest.files.Count)/$($manife
 Section "Build unsigned production-identity Windows RC"
 Push-Location $FoundationPath
 try {
-  npm run tauri -- build --bundles nsis
+  npm run tauri -- build --bundles nsis --config src-tauri/tauri.release-ace.conf.json
   if ($LASTEXITCODE -ne 0) { throw "Tauri/NSIS release candidate build failed." }
 } finally {
   Pop-Location

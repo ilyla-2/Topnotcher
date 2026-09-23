@@ -15,6 +15,7 @@ def main():
 
     root = Path(args.foundation).resolve()
     tauri_path = root / "src-tauri" / "tauri.conf.json"
+    release_config_path = root / "src-tauri" / "tauri.release-ace.conf.json"
     metadata_path = root / "release" / "metadata.json"
 
     if not tauri_path.is_file() or not metadata_path.is_file():
@@ -39,14 +40,17 @@ def main():
         "publicReleaseApproved": meta.get("publicReleaseApproved"),
     }
 
-    tauri["identifier"] = NEW_IDENTIFIER
+    release_config = {
+        "identifier": NEW_IDENTIFIER,
+        "productName": "CELE Topnotcher OS"
+    }
     meta["publisher"] = PUBLISHER_BRAND
     meta["signed"] = False
     meta["publicReleaseApproved"] = False
     meta["releaseIdentityPhase"] = "v3.21.9"
     meta["signingStatus"] = "not-configured"
 
-    tauri_path.write_text(json.dumps(tauri, indent=2) + "\n", encoding="utf-8")
+    release_config_path.write_text(json.dumps(release_config, indent=2) + "\n", encoding="utf-8")
     metadata_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
 
     report = {
@@ -55,6 +59,8 @@ def main():
         "foundation": str(root),
         "before": before,
         "after": {
+            "baseIdentifier": current,
+            "releaseConfigIdentifier": NEW_IDENTIFIER,
             "identifier": NEW_IDENTIFIER,
             "publisher": PUBLISHER_BRAND,
             "signed": False,
@@ -62,9 +68,10 @@ def main():
             "signingStatus": "not-configured",
         },
         "touchedFiles": [
-            "src-tauri/tauri.conf.json",
+            "src-tauri/tauri.release-ace.conf.json",
             "release/metadata.json"
         ],
+        "baseTauriConfigTouched": False,
         "frontendTouched": False,
         "compilerTouched": False,
         "releaseReady": False

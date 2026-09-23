@@ -51,7 +51,7 @@
       "evidenceRef": "release-gates/v3.21.9-release-identity.json"
     },
     "publicReleaseCandidate": {
-      "status": "BUILDER_CONFIGURED",
+      "status": "BUILDER_REVISED_AFTER_GUARD",
       "phase": "v3.21.10",
       "candidate": "RC1",
       "platform": "windows-x64",
@@ -62,7 +62,9 @@
       "artifactDigest": null,
       "executableSha256": null,
       "installerSha256": null,
-      "note": "Generated candidate is for controlled manual certification only and is not public-release approved."
+      "note": "RC run #1 correctly failed because mutating the certified base identifier triggered foundation integrity. v3.21.10 now uses a separate Tauri release overlay config; no product regression was indicated.",
+      "failedRunId": 35893752706,
+      "failedRunClassification": "RELEASE_OVERLAY_ARCHITECTURE_GUARD"
     }
   },
   "manualGates": {

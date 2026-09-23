@@ -64,6 +64,12 @@ def main():
     after = identity.get("after", {})
     if after.get("identifier") != "com.ace.celetopnotcher":
         failures.append("Release identity overlay identifier mismatch")
+    if after.get("baseIdentifier") != "local.cele.topnotcher.foundation":
+        failures.append("Certified base identifier was not preserved by release overlay")
+    if after.get("releaseConfigIdentifier") != "com.ace.celetopnotcher":
+        failures.append("Release overlay config identifier mismatch")
+    if identity.get("baseTauriConfigTouched") is not False:
+        failures.append("Release identity overlay modified the certified base Tauri config")
     if after.get("publisher") != "ace":
         failures.append("Release identity overlay publisher mismatch")
     if after.get("signed") is not False or after.get("publicReleaseApproved") is not False:
