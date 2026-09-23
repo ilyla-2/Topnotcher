@@ -134,16 +134,50 @@
       "productCoreRegression": false
     },
     "publicReleaseCandidateRc2": {
-      "status": "BUILDER_CONFIGURED",
+      "status": "RC2_BUILT_STARTUP_CERTIFIED_AND_AUDITED",
       "phase": "v3.21.12",
       "candidate": "RC2",
       "platform": "windows-x64",
       "signing": "UNSIGNED",
-      "requiredStartupUrl": "payload/CELE_Topnotcher_OS_v3_21_0.html",
-      "requiredPublicStartupIpcChecks": "13/13 PASS",
-      "latestSuccessfulRunId": null,
-      "artifactId": null,
-      "artifactDigest": null
+      "distributionStatus": "CONTROLLED_MANUAL_CERTIFICATION_ONLY",
+      "startupUrl": "payload/CELE_Topnotcher_OS_v3_21_0.html",
+      "publicStartupIpc": "PASS_13_OF_13",
+      "successfulRunId": 35897863593,
+      "successfulRunNumber": 1,
+      "successfulCommitSha": "d29aeed045277e8b24edbfaa5a8528f413328081",
+      "runner": "windows-2025",
+      "frozenBranch": "rc/v3.21.12-windows-rc2-unsigned",
+      "artifactId": 10767244775,
+      "artifactName": "CELE-Topnotcher-OS-v3.21.12-RC2-UNSIGNED-Windows-x64",
+      "artifactDigest": "sha256:12c160beb5959ae93144ee3a8ca05abade210d6403724f381a0baeec2cb255ce",
+      "artifactExpiresAtUtc": "2026-12-22T17:46:06Z",
+      "rcArchive": {
+        "file": "CELE_Topnotcher_OS_v3.21.12_RC2_UNSIGNED_Windows_x64.zip",
+        "sha256": "5fd48497cb213a213f88ff6ef4ef160714ea3e6affa92d699c734a4950249cc5"
+      },
+      "executable": {
+        "file": "CELE-Topnotcher-OS-v3.21.12-RC2-unsigned.exe",
+        "bytes": 10353152,
+        "sha256": "958102dec42e838dc2c89c910dc7383cd681e7baf2801abb5013ba7395831972",
+        "authenticodeStatus": "NotSigned"
+      },
+      "installer": {
+        "file": "CELE-Topnotcher-OS-v3.21.12-RC2-unsigned-setup.exe",
+        "bytes": 219111261,
+        "sha256": "6d5b378d3c46850c6f55e1046c9880f6fe8fa6b030bc23fc2d4cacddaa5d7d3b",
+        "authenticodeStatus": "NotSigned"
+      },
+      "builtInstallerAudit": {
+        "status": "PASS",
+        "extractedFiles": 8,
+        "forbiddenFiles": 0,
+        "forbiddenPaths": 0,
+        "privateMarkerHits": 0,
+        "secretPatternHits": 0,
+        "failures": 0,
+        "warnings": 0
+      },
+      "note": "RC2 fixes only public startup routing. It opens the reviewed CELE v3.21.0 payload directly and passed the full 13-check WebView2/Tauri IPC certificate before installer acceptance."
     }
   },
   "manualGates": {
@@ -160,7 +194,7 @@
       "evidenceRefs": []
     },
     "installedAppLifecycle": {
-      "status": "PENDING_RC2_BUILD_AND_LIFECYCLE",
+      "status": "PENDING_RC2_INSTALLED_LIFECYCLE",
       "reviewedBy": null,
       "reviewedAtUtc": null,
       "evidenceRefs": []

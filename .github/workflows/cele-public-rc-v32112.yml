@@ -2,14 +2,6 @@ name: CELE v3.21.12 Public Startup Routing RC2
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/cele-public-rc-v32112.yml'
-      - 'scripts/build-public-rc-v32112.ps1'
-      - 'scripts/audit-built-windows-rc-v32112.py'
-      - 'scripts/apply-release-identity-v3219.py'
 
 permissions:
   contents: read

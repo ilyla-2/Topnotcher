@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "phase": "v3.21.12-public-startup-routing-rc2",
+  "status": "RC2_BUILT_STARTUP_CERTIFIED_AND_AUDITED",
+  "publicReleaseApproved": false,
+  "releaseReady": false,
+  "product": "CELE Topnotcher OS",
+  "publisherBrand": "ace",
+  "identifier": "com.ace.celetopnotcher",
+  "startupUrl": "payload/CELE_Topnotcher_OS_v3_21_0.html",
+  "startupCertificate": {
+    "status": "PASS",
+    "checksPassed": 13,
+    "checksExpected": 13
+  },
+  "sourceCommit": "d29aeed045277e8b24edbfaa5a8528f413328081",
+  "frozenBranch": "rc/v3.21.12-windows-rc2-unsigned",
+  "workflowRunId": 35897863593,
+  "artifact": {
+    "id": 10767244775,
+    "name": "CELE-Topnotcher-OS-v3.21.12-RC2-UNSIGNED-Windows-x64",
+    "digest": "sha256:12c160beb5959ae93144ee3a8ca05abade210d6403724f381a0baeec2cb255ce",
+    "expiresAtUtc": "2026-12-22T17:46:06Z"
+  },
+  "archiveSha256": "5fd48497cb213a213f88ff6ef4ef160714ea3e6affa92d699c734a4950249cc5",
+  "executableSha256": "958102dec42e838dc2c89c910dc7383cd681e7baf2801abb5013ba7395831972",
+  "installerSha256": "6d5b378d3c46850c6f55e1046c9880f6fe8fa6b030bc23fc2d4cacddaa5d7d3b",
+  "signing": "NOT_CONFIGURED",
+  "remainingGates": [
+    "installed RC2 lifecycle",
+    "native file-picker human interaction",
+    "DPI/display human inspection",
+    "version-to-version upgrade",
+    "code signing",
+    "final redistribution review"
+  ]
+}
