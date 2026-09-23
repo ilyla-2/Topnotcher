@@ -28,6 +28,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
       - name: Reconstruct exact v3.21.7 certification payload
         shell: pwsh
         run: |
@@ -36,26 +41,65 @@ jobs:
           if (-not (Test-Path -LiteralPath $base -PathType Leaf)) { throw 'Missing v3.21.6 base payload.' }
           if (-not (Test-Path -LiteralPath $overlay -PathType Leaf)) { throw 'Missing v3.21.7 overlay.' }
           $work = Join-Path $env:RUNNER_TEMP 'cele-v3217-rebuild'
-          if (Test-Path $work) { Remove-Item -Recurse -Force $work }
-          New-Item -ItemType Directory -Force -Path $work | Out-Null
-          Expand-Archive -LiteralPath $base -DestinationPath $work -Force
-          Rename-Item -LiteralPath (Join-Path $work 'foundation_0_3_5') -NewName 'foundation_0_3_6'
-          Expand-Archive -LiteralPath $overlay -DestinationPath $work -Force
-          Remove-Item -LiteralPath (Join-Path $work 'OVERLAY_MANIFEST.json') -Force
           $dest = Join-Path $env:GITHUB_WORKSPACE 'cele-cert'
+          if (Test-Path $work) { Remove-Item -Recurse -Force $work }
+          if (Test-Path $dest) { Remove-Item -Recurse -Force $dest }
+          New-Item -ItemType Directory -Force -Path $work | Out-Null
           New-Item -ItemType Directory -Force -Path $dest | Out-Null
-          Copy-Item -Recurse -Force (Join-Path $work '*') $dest
-          Get-ChildItem -LiteralPath $dest
+          $env:CELE_BASE_ZIP = $base
+          $env:CELE_OVERLAY_ZIP = $overlay
+          $env:CELE_REBUILD_DIR = $work
+          $env:CELE_DEST_DIR = $dest
+          @'
+          import os, shutil, zipfile
+          from pathlib import Path
+
+          base = Path(os.environ["CELE_BASE_ZIP"])
+          overlay = Path(os.environ["CELE_OVERLAY_ZIP"])
+          work = Path(os.environ["CELE_REBUILD_DIR"])
+          dest = Path(os.environ["CELE_DEST_DIR"])
+
+          with zipfile.ZipFile(base) as z:
+              z.extractall(work)
+
+          src = work / "foundation_0_3_5"
+          dst = work / "foundation_0_3_6"
+          if not src.is_dir():
+              raise SystemExit("v3.21.6 base payload missing foundation_0_3_5")
+          src.rename(dst)
+
+          with zipfile.ZipFile(overlay) as z:
+              z.extractall(work)
+
+          manifest = work / "OVERLAY_MANIFEST.json"
+          if manifest.exists():
+              manifest.unlink()
+
+          for p in work.iterdir():
+              target = dest / p.name
+              if p.is_dir():
+                  shutil.copytree(p, target, dirs_exist_ok=True)
+              else:
+                  shutil.copy2(p, target)
+
+          required = [
+              dest / "foundation_0_3_6" / "scripts" / "windows-certify-cloud-v3217.ps1",
+              dest / "foundation_0_3_6" / "src-tauri" / "src" / "main.rs",
+              dest / "frontend_v3_21_0" / "index.html",
+          ]
+          for p in required:
+              if not p.exists():
+                  raise SystemExit(f"Reconstruction missing required path: {p}")
+
+          print("Reconstructed v3.21.7 certification payload successfully.")
+          for p in sorted(dest.iterdir()):
+              print(p.name)
+          '@ | python -
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
 
       - name: Select stable MSVC Rust toolchain
         shell: pwsh
