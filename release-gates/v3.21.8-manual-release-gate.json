@@ -26,19 +26,29 @@
       "note": "Source/runtime cleanliness pre-audit only; final signed installer redistribution review remains manual."
     },
     "publisherIdentity": {
-      "status": "PENDING",
-      "publisherName": null
+      "status": "APPROVED",
+      "publisherName": "ace",
+      "scope": "product/release brand only; not a claim about future Authenticode certificate subject",
+      "authenticodeSignerIdentityStatus": "PENDING_CERTIFICATE"
     },
     "productionBundleIdentifier": {
-      "status": "PENDING",
+      "status": "APPROVED",
       "currentIdentifier": "local.cele.topnotcher.foundation",
-      "finalIdentifier": null,
-      "migrationReviewed": false
+      "finalIdentifier": "com.ace.celetopnotcher",
+      "migrationReviewed": true,
+      "migrationNote": "No public release shipped under the placeholder identifier. Existing development-install data is not treated as an automatic first-public-release migration source."
     },
     "signingProvider": {
-      "status": "PENDING",
+      "status": "NOT_CONFIGURED",
       "provider": null,
-      "mechanism": null
+      "mechanism": null,
+      "certificateAvailable": false,
+      "note": "User currently has no Windows code-signing certificate or signing service. Public release remains blocked."
+    },
+    "identityConfiguration": {
+      "status": "APPROVED",
+      "phase": "v3.21.9",
+      "evidenceRef": "release-gates/v3.21.9-release-identity.json"
     }
   },
   "manualGates": {

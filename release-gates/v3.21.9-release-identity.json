@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "phase": "v3.21.9-release-identity-signing-configuration",
+  "product": {
+    "displayName": "CELE Topnotcher OS",
+    "publisherBrand": "ace",
+    "publicIdentifier": "com.ace.celetopnotcher"
+  },
+  "priorDevelopmentIdentity": {
+    "identifier": "local.cele.topnotcher.foundation",
+    "status": "DEVELOPMENT_ONLY",
+    "publicReleaseUsed": false
+  },
+  "migration": {
+    "reviewed": true,
+    "automaticMigration": false,
+    "note": "No public release has shipped under the placeholder identifier. Existing internal/development installs may use a different app-data location and are not treated as a supported migration source for the first public release."
+  },
+  "signing": {
+    "configured": false,
+    "provider": null,
+    "mechanism": null,
+    "certificateAvailable": false,
+    "authenticodeSignerIdentity": null,
+    "note": "User currently has no Windows code-signing certificate or configured signing service. Public release remains blocked until a real signing method is selected, configured outside the repository, and verified."
+  },
+  "releasePolicy": {
+    "unsignedPublicReleaseAllowed": false,
+    "unsignedDevelopmentBuildAllowed": true,
+    "requireValidAuthenticodeForPublicRelease": true,
+    "requireTimestampForPublicRelease": true
+  },
+  "status": "IDENTITY_SELECTED_SIGNING_PENDING",
+  "releaseReady": false
+}
