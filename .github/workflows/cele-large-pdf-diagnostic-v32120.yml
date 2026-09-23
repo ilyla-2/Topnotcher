@@ -1,0 +1,89 @@
+name: CELE v3.21.20 Large PDF Intake Diagnostic
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cele-large-pdf-diagnostic-v32120.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct exact corrected RC4 frontend and inspect PDF intake path
+        shell: python
+        run: |
+          import base64,hashlib,shutil,zipfile,re,subprocess,sys,json
+          from pathlib import Path
+          root=Path.cwd();tmp=root/'.diag20';out=root/'diag20-source'
+          for p in [tmp,out]:
+              if p.exists():shutil.rmtree(p)
+              p.mkdir()
+          with zipfile.ZipFile(root/'CELE_v3_21_6_Cloud_Certification_Payload.zip') as z:z.extractall(tmp)
+          (tmp/'foundation_0_3_5').rename(tmp/'foundation_0_3_6')
+          ns=['part00.b64','part01.b64','part02.b64','part03.b64','part04.b64','part05a.b64','part05b.b64','part06.b64']
+          raw=base64.b64decode(''.join((root/'v3217_overlay_parts'/n).read_text() for n in ns),validate=True)
+          assert hashlib.sha256(raw).hexdigest()=='fa627fa31932f278efa5a8ad6ec5155be5fb9e40899ddc421380d18f7d07a75a'
+          op=tmp/'o.zip';op.write_bytes(raw)
+          with zipfile.ZipFile(op) as z:z.extractall(tmp)
+          (tmp/'OVERLAY_MANIFEST.json').unlink(missing_ok=True);op.unlink(missing_ok=True)
+          for p in tmp.iterdir():
+              d=out/p.name
+              shutil.copytree(p,d,dirs_exist_ok=True) if p.is_dir() else shutil.copy2(p,d)
+          front=out/'frontend_v3_21_0'
+          subprocess.check_call([sys.executable,'scripts/patch-ui-interactions-v32117.py','--frontend',str(front),'--report',str(root/'diag17.json')])
+          subprocess.check_call([sys.executable,'scripts/patch-ocr-ui-wire-v32118.py','--frontend',str(front),'--report',str(root/'diag18.json')])
+
+          def extract_named(src,name):
+              patterns=[
+                rf'(?:async\s+)?function\s+{re.escape(name)}\s*\([^)]*\)\s*\{{',
+                rf'\b{re.escape(name)}\s*=\s*(?:async\s*)?function\s*\([^)]*\)\s*\{{',
+                rf'\b{re.escape(name)}\s*=\s*(?:async\s*)?\([^)]*\)\s*=>\s*\{{'
+              ]
+              for pat in patterns:
+                  m=re.search(pat,src)
+                  if not m: continue
+                  brace=src.find('{',m.start())
+                  depth=0;quote=None;esc=False
+                  for i in range(brace,len(src)):
+                      ch=src[i]
+                      if quote:
+                          if esc:esc=False
+                          elif ch=='\\':esc=True
+                          elif ch==quote:quote=None
+                          continue
+                      if ch in "'\"":quote=ch;continue
+                      if ch=='{':depth+=1
+                      elif ch=='}':
+                          depth-=1
+                          if depth==0:return src[m.start():i+1]
+              return None
+
+          jsfiles=[p for p in front.rglob('*.js') if p.is_file()]
+          targets=['processIntakeFile','updateScanPreview','refreshOcrBackendV15','renderPdfPageV14','bridgeOcrPageV15','nativeOcrPageV14','ocrPageV15']
+          for name in targets:
+              print('\n### FUNCTION',name,'###')
+              found=False
+              for p in jsfiles:
+                  src=p.read_text(encoding='utf-8',errors='ignore')
+                  body=extract_named(src,name)
+                  if body:
+                      print('FILE',p.relative_to(front))
+                      print(body[:30000])
+                      found=True
+              if not found:print('NOT FOUND')
+
+          print('\n### NATIVE DOCUMENT TRANSPORT ###')
+          p=front/'assets/js/00-native-document-transport-v3210.js'
+          print(p.read_text(encoding='utf-8',errors='ignore'))
+
+          print('\n### LARGE-BUFFER / SERIALIZATION SITES ###')
+          needles=['arrayBuffer','Uint8Array','Array.from','FileReader','readAsDataURL','registerPdf','register_source_pdf','pdfFileInput','scanFile','URL.createObjectURL','base64']
+          for p in jsfiles:
+              lines=p.read_text(encoding='utf-8',errors='ignore').splitlines()
+              hits=[(i+1,l) for i,l in enumerate(lines) if any(n in l for n in needles)]
+              if hits:
+                  print('\nFILE',p.relative_to(front))
+                  for i,l in hits[:400]:print(f'{i:05d}: {l}')
