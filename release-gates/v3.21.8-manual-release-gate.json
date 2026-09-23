@@ -347,20 +347,54 @@
       "artifactSizeBytes": 438402908,
       "artifactExpiresAtUtc": "2026-12-22T19:30:06Z",
       "note": "Definitive RC4 human-retest bundle. Always reinstalls corrected RC4 over any older 0.3.6 candidate and explicitly checks Practice, Progress, Sources & AI, and System before PDF/OCR and DPI checks."
+    },
+    "humanRc4Evidence": {
+      "status": "FAIL_RELEASE_BLOCKING",
+      "phase": "v3.21.19-human-rc4-evidence-review",
+      "tester": "ace",
+      "evidenceArchiveSha256": "a0b01d56e9f1ee8b6d0171246776e1b6228b8416d5d40c97e3821bdc03e130ec",
+      "reportSha256": "2760d9fe572235a417e621e6d333170231f6d9ce2e37688fb9c0d49aef4caa89",
+      "installerSha256": "7ec4f3db339803f431b7ab081f325c19e17ffc1adbffa28dd8dd1536154696f6",
+      "sidebarInteraction": "PASS_CANDIDATE_4_OF_4",
+      "nativeFilePicker": "FAIL",
+      "crashEvidence": "All four screenshots captured CELE Topnotcher OS in a Not Responding state during preboard PDF intake.",
+      "dpiEvidence": "INVALID_FOR_APPROVAL",
+      "dpiReason": "Measured Windows scale remained 100% for all nominal 100/125/150/200 captures; screenshots were also taken while the app was Not Responding.",
+      "diagnosticRunId": 35912435337,
+      "diagnosis": "Large preboard PDFs enter browser-side whole-file PDF parsing before native handling. The path can read/parse the same large file multiple times and later base64-serialize it for Tauri, creating a main-thread responsiveness risk on real hardware."
+    },
+    "largePdfIntakeResilience": {
+      "status": "PATCH_AUTHORED_AWAITING_RC5_STRESS_AND_BUILD",
+      "phase": "v3.21.20",
+      "thresholdBytes": 8388608,
+      "strategy": "On native Windows, PDFs >=8 MiB bypass browser-side whole-file parsing and route directly to native PDF/OCR. Large native PDF base64 transport is chunked with cooperative event-loop yields.",
+      "patch": "scripts/patch-large-pdf-intake-v32120.py",
+      "sourceAudit": "scripts/audit-large-pdf-intake-v32120.py",
+      "diagnosticRuns": [
+        35912243674,
+        35912435337
+      ],
+      "compilerChanged": false,
+      "questionDataChanged": false,
+      "trustSemanticsChanged": false
     }
   },
   "manualGates": {
     "nativeFilePicker": {
-      "status": "READY_FOR_RC4_HUMAN_RETEST",
-      "reviewedBy": null,
-      "reviewedAtUtc": null,
-      "evidenceRefs": []
+      "status": "FAIL_LARGE_PDF_INTAKE_HANG_RC4",
+      "reviewedBy": "ace",
+      "reviewedAtUtc": "2026-09-23T19:48:35.3689245Z",
+      "evidenceRefs": [
+        "User evidence archive SHA-256 a0b01d56e9f1ee8b6d0171246776e1b6228b8416d5d40c97e3821bdc03e130ec"
+      ]
     },
     "displayAndDpi": {
-      "status": "READY_FOR_RC4_HUMAN_RETEST",
-      "reviewedBy": null,
-      "reviewedAtUtc": null,
-      "evidenceRefs": []
+      "status": "INVALID_RETEST_REQUIRED_AFTER_PDF_FIX",
+      "reviewedBy": "ace",
+      "reviewedAtUtc": "2026-09-23T19:48:35.3689245Z",
+      "evidenceRefs": [
+        "Same v3.21.19 evidence archive; measuredPercent remained 100 for all four nominal targets"
+      ]
     },
     "installedAppLifecycle": {
       "status": "AUTOMATED_LIFECYCLE_AND_VERSION_UPGRADE_PASS",
@@ -388,6 +422,6 @@
       "evidenceRefs": []
     }
   },
-  "nativeAdapterQA": "pending-manual-desktop-gates",
+  "nativeAdapterQA": "failed-manual-large-pdf-intake-pending-fix-retest",
   "releaseReady": false
 }
