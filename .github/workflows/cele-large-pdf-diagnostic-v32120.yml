@@ -35,6 +35,7 @@ jobs:
           front=out/'frontend_v3_21_0'
           subprocess.check_call([sys.executable,'scripts/patch-ui-interactions-v32117.py','--frontend',str(front),'--report',str(root/'diag17.json')])
           subprocess.check_call([sys.executable,'scripts/patch-ocr-ui-wire-v32118.py','--frontend',str(front),'--report',str(root/'diag18.json')])
+          subprocess.check_call([sys.executable,'scripts/patch-large-pdf-intake-v32120.py','--frontend',str(front),'--report',str(root/'diag20.json')])
 
           def extract_named(src,name):
               patterns=[
@@ -96,7 +97,7 @@ jobs:
           print(p.read_text(encoding='utf-8',errors='ignore'))
 
           print('\n### LARGE-BUFFER / SERIALIZATION SITES ###')
-          needles=['arrayBuffer','Uint8Array','Array.from','FileReader','readAsDataURL','registerPdf','register_source_pdf','pdfFileInput','scanFile','URL.createObjectURL','base64']
+          needles=['CELE_LARGE_PDF_V32120','native-large','blobToBase64Responsive','arrayBuffer','Uint8Array','Array.from','registerPdf','register_source_pdf','pdfFileInput','scanFile','URL.createObjectURL','base64']
           for p in jsfiles:
               lines=p.read_text(encoding='utf-8',errors='ignore').splitlines()
               hits=[(i+1,l) for i,l in enumerate(lines) if any(n in l for n in needles)]
