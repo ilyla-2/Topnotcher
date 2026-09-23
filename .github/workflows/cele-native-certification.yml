@@ -1,4 +1,4 @@
-name: CELE v3.21.5 Windows Cloud Certification
+name: CELE v3.21.6 Windows Cloud Certification
 
 on:
   workflow_dispatch:
@@ -28,9 +28,9 @@ jobs:
       - name: Verify certification payload exists
         shell: pwsh
         run: |
-          $payload = Join-Path $env:GITHUB_WORKSPACE 'CELE_v3_21_5_Cloud_Certification_Payload.zip'
+          $payload = Join-Path $env:GITHUB_WORKSPACE 'CELE_v3_21_6_Cloud_Certification_Payload.zip'
           if (-not (Test-Path -LiteralPath $payload -PathType Leaf)) {
-            throw 'Missing CELE_v3_21_5_Cloud_Certification_Payload.zip in repository root.'
+            throw 'Missing CELE_v3_21_6_Cloud_Certification_Payload.zip in repository root.'
           }
           Get-FileHash -Algorithm SHA256 -LiteralPath $payload
 
@@ -39,7 +39,7 @@ jobs:
         run: |
           $dest = Join-Path $env:GITHUB_WORKSPACE 'cele-cert'
           New-Item -ItemType Directory -Force -Path $dest | Out-Null
-          Expand-Archive -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'CELE_v3_21_5_Cloud_Certification_Payload.zip') -DestinationPath $dest -Force
+          Expand-Archive -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'CELE_v3_21_6_Cloud_Certification_Payload.zip') -DestinationPath $dest -Force
           Get-ChildItem -LiteralPath $dest
 
       - name: Set up Node.js
@@ -63,16 +63,16 @@ jobs:
         id: certification
         continue-on-error: true
         shell: pwsh
-        working-directory: cele-cert/foundation_0_3_4
+        working-directory: cele-cert/foundation_0_3_5
         run: |
-          .\scripts\windows-certify-cloud-v3215.ps1
+          .\scripts\windows-certify-cloud-v3216.ps1
 
       - name: Publish certification summary
         if: always()
         shell: pwsh
         run: |
-          $summary = Join-Path $env:GITHUB_WORKSPACE 'cele-cert\foundation_0_3_4\release\native-certification\cloud-windows-certification-summary.json'
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '# CELE v3.21.5 Windows Cloud Certification'
+          $summary = Join-Path $env:GITHUB_WORKSPACE 'cele-cert\foundation_0_3_5\release\native-certification\cloud-windows-certification-summary.json'
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '# CELE v3.21.6 Windows Cloud Certification'
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ''
           if (Test-Path -LiteralPath $summary) {
             $s = Get-Content -Raw -LiteralPath $summary | ConvertFrom-Json
@@ -93,9 +93,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: CELE-v3.21.5-windows-cloud-certification-evidence-${{ inputs.windows_runner }}
+          name: CELE-v3.21.6-windows-cloud-certification-evidence-${{ inputs.windows_runner }}
           path: |
-            cele-cert/foundation_0_3_4/release/native-certification/**
+            cele-cert/foundation_0_3_5/release/native-certification/**
           if-no-files-found: warn
           retention-days: 14
 
@@ -103,7 +103,7 @@ jobs:
         if: always()
         shell: pwsh
         run: |
-          $summary = Join-Path $env:GITHUB_WORKSPACE 'cele-cert\foundation_0_3_4\release\native-certification\cloud-windows-certification-summary.json'
+          $summary = Join-Path $env:GITHUB_WORKSPACE 'cele-cert\foundation_0_3_5\release\native-certification\cloud-windows-certification-summary.json'
           if (-not (Test-Path -LiteralPath $summary)) {
             throw 'Certification summary was not produced. Download the evidence/logs and inspect the failed run.'
           }
